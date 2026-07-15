@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+@layer utilities {
+  /* Admin tables: scroll on small screens, larger tap targets */
+  .admin-table-wrap {
+    @apply -mx-1 max-w-full overflow-x-auto rounded border border-slate-200 bg-white shadow-sm;
+  }
+
+  .admin-table {
+    @apply min-w-[640px] w-full divide-y divide-slate-200 text-sm;
+  }
+
+  .admin-table th {
+    @apply px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 sm:px-4;
+  }
+
+  .admin-table td {
+    @apply px-3 py-3.5 text-slate-700 sm:px-4;
+  }
+
+  .admin-table tbody tr {
+    @apply min-h-[48px];
+  }
+}
