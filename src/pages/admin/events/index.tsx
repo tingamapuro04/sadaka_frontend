@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { IconCalendar } from '../../../components/icons';
 import {
   Button,
   ConfirmDialog,
   EmptyState,
+  PageHeader,
+  Select,
   StatusBadge,
   useToast
 } from '../../../components/ui';
@@ -84,56 +87,51 @@ export const AdminEventsPage = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Events</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Create fundraisers with unique payment links and track contributions per event.
-          </p>
-        </div>
-        {!isReadonly ? (
-          <Button
-            onClick={() => {
-              setFormError(null);
-              setModalEvent(null);
-            }}
-          >
-            Create event
-          </Button>
-        ) : null}
-      </div>
+    <div className="space-y-5 animate-fade-in">
+      <PageHeader
+        title="Events"
+        description="Create fundraisers with unique payment links and track contributions per event."
+        actions={
+          !isReadonly ? (
+            <Button
+              onClick={() => {
+                setFormError(null);
+                setModalEvent(null);
+              }}
+            >
+              Create event
+            </Button>
+          ) : undefined
+        }
+      />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="text-sm font-medium text-slate-700">
-          Status
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="ml-2 min-h-[40px] rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
-          >
-            <option value="">All</option>
-            <option value="active">Active</option>
-            <option value="draft">Draft</option>
-            <option value="closed">Closed</option>
-          </select>
-        </label>
+      <div className="max-w-xs">
+        <Select
+          label="Status"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="draft">Draft</option>
+          <option value="closed">Closed</option>
+        </Select>
       </div>
 
       {eventsQuery.isLoading ? (
-        <p className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-600" role="status">
+        <p className="card card-pad text-sm text-ink-muted" role="status">
           Loading events…
         </p>
       ) : null}
       {eventsQuery.isError ? (
-        <p className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
           Unable to load events.
         </p>
       ) : null}
 
       {!eventsQuery.isLoading && !eventsQuery.isError && events.length === 0 ? (
         <EmptyState
-          icon="📅"
+          icon={<IconCalendar className="h-6 w-6" />}
           title="No events yet"
           description={
             isReadonly
@@ -153,92 +151,107 @@ export const AdminEventsPage = () => {
       ) : null}
 
       {events.length > 0 ? (
-        <ul className="divide-y divide-slate-100 overflow-hidden rounded border border-slate-200 bg-white shadow-sm">
-          {events.map((event) => (
-            <li
-              key={event.id}
-              className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
+        <ul className="card divide-y divide-slate-100 overflow-hidden">
+          {events.map((event) => {
+            const raised = event.totals?.paid_gross ?? 0;
+            const target = event.target_amount != null ? Number(event.target_amount) : null;
+            const progress =
+              target && target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : null;
+
+            return (
+              <li
+                key={event.id}
+                className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      to={`/admin/events/${event.id}`}
+                      className="font-semibold text-ink hover:text-brand-700 hover:underline"
+                    >
+                      {event.title}
+                    </Link>
+                    <StatusBadge label={event.status} />
+                  </div>
+                  <p className="mt-1 truncate text-xs text-ink-muted">/{event.slug}</p>
+                  <p className="mt-2 text-sm text-ink-muted">
+                    Raised{' '}
+                    <span className="font-semibold tabular-nums text-ink">
+                      {formatKesCurrency(raised)}
+                    </span>
+                    {target != null ? (
+                      <span>
+                        {' '}
+                        of {formatKesCurrency(target)}
+                      </span>
+                    ) : null}
+                    <span>
+                      {' '}
+                      · {event.totals?.paid_count ?? 0} paid
+                      {(event.totals?.awaiting_count ?? 0) > 0
+                        ? ` · ${event.totals?.awaiting_count} pending`
+                        : ''}
+                    </span>
+                  </p>
+                  {progress != null ? (
+                    <div className="mt-2 h-1.5 max-w-xs overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-brand-600"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="flex flex-wrap gap-2">
                   <Link
                     to={`/admin/events/${event.id}`}
-                    className="font-semibold text-slate-950 hover:text-emerald-700 hover:underline"
+                    className="inline-flex min-h-[40px] items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-soft hover:bg-slate-50"
                   >
-                    {event.title}
+                    Open
                   </Link>
-                  <StatusBadge label={event.status} />
-                </div>
-                <p className="mt-1 truncate text-xs text-slate-500">/{event.slug}</p>
-                <p className="mt-2 text-sm text-slate-600">
-                  Raised{' '}
-                  <span className="font-medium text-slate-900">
-                    {formatKesCurrency(event.totals?.paid_gross ?? 0)}
-                  </span>
-                  {event.target_amount != null ? (
-                    <span className="text-slate-500">
-                      {' '}
-                      of {formatKesCurrency(event.target_amount)}
-                    </span>
+                  <Button variant="secondary" size="sm" onClick={() => void copyLink(event)}>
+                    Copy link
+                  </Button>
+                  {!isReadonly ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setFormError(null);
+                          setModalEvent(event);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      {event.status === 'active' ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={statusMutation.isPending}
+                          onClick={() => setConfirmClose(event)}
+                          className="border-amber-300 text-amber-950"
+                        >
+                          Close
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={statusMutation.isPending}
+                          onClick={() => statusMutation.mutate({ id: event.id, status: 'active' })}
+                          className="border-brand-200 text-brand-900"
+                        >
+                          Reopen
+                        </Button>
+                      )}
+                    </>
                   ) : null}
-                  <span className="text-slate-500">
-                    {' '}
-                    · {event.totals?.paid_count ?? 0} paid
-                    {(event.totals?.awaiting_count ?? 0) > 0
-                      ? ` · ${event.totals?.awaiting_count} pending`
-                      : ''}
-                  </span>
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to={`/admin/events/${event.id}`}
-                  className="inline-flex min-h-[40px] items-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Open
-                </Link>
-                <Button variant="secondary" size="sm" onClick={() => void copyLink(event)}>
-                  Copy link
-                </Button>
-                {!isReadonly ? (
-                  <>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        setFormError(null);
-                        setModalEvent(event);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    {event.status === 'active' ? (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        disabled={statusMutation.isPending}
-                        onClick={() => setConfirmClose(event)}
-                        className="border-amber-300 text-amber-950"
-                      >
-                        Close
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        disabled={statusMutation.isPending}
-                        onClick={() => statusMutation.mutate({ id: event.id, status: 'active' })}
-                        className="border-emerald-300 text-emerald-950"
-                      >
-                        Reopen
-                      </Button>
-                    )}
-                  </>
-                ) : null}
-              </div>
-            </li>
-          ))}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       ) : null}
 

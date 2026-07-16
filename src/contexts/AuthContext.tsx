@@ -54,6 +54,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setToken(null);
     setRole(null);
     setIsAuthReady(true);
+
+    // Clear the httpOnly session cookie so refresh does not rehydrate via /api/auth/me.
+    // Fire-and-forget: local state is already cleared even if the network call fails.
+    void fetch(`${API_BASE_URL}${API_ENDPOINTS.authLogout}`, {
+      method: 'POST',
+      credentials: 'include'
+    }).catch(() => {
+      // Ignore network errors on logout
+    });
   }, [clearTimers]);
 
   const scheduleInactivityTimers = useCallback(() => {
@@ -111,8 +120,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           return;
         }
 
-        setToken(data.token);
-        setRole(data.role);
+        // Only restore church-admin sessions here. Platform (Sadaka) tokens share
+        // the same cookie name but must not mark the church AuthContext as logged in.
+        if (data.role === 'church_super_admin' || data.role === 'readonly') {
+          setToken(data.token);
+          setRole(data.role);
+        } else {
+          setToken(null);
+          setRole(null);
+        }
       } catch {
         if (!cancelled) {
           setToken(null);

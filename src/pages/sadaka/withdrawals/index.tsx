@@ -72,12 +72,12 @@ export const SadakaWithdrawalsPage = () => {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Withdrawals</h1>
-          <p className="mt-1 text-sm text-slate-600">Platform-wide status, filter, and retry controls.</p>
+          <h1 className="page-title">Withdrawals</h1>
+          <p className="page-subtitle">Platform-wide status, filter, and retry controls.</p>
         </div>
       </div>
 
-      <section className="grid gap-3 rounded border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
+      <section className="grid gap-3 card card-pad md:grid-cols-3">
         <label className="text-sm">
           <span className="mb-1 block font-medium text-slate-700">Status</span>
           <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className="w-full rounded border border-slate-300 px-3 py-2">
@@ -111,7 +111,7 @@ export const SadakaWithdrawalsPage = () => {
       {withdrawalsQuery.isError ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load withdrawals.</div> : null}
       {errorMessage ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">{errorMessage}</div> : null}
 
-      <section className="rounded border border-slate-200 bg-white shadow-sm">
+      <section className="card">
         <div className="divide-y divide-slate-100">
           {!withdrawalsQuery.isLoading && pagedWithdrawals.length === 0 ? (
             <p className="p-4 text-sm text-slate-500">No withdrawals match the current filters.</p>

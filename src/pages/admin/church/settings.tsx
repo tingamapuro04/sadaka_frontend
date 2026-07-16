@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../hooks/useAuth';
+import { PhoneInput } from '../../../components/shared/PhoneInput';
+import { Button, Card, Input, PageHeader, Select } from '../../../components/ui';
 import { adminQueryKeys, changeChurchPassword, fetchAuditLogs, fetchChurch, updateChurch, uploadChurchLogo } from '../api';
 import type { AdminChurch } from '../types';
 import { LogoUpload } from './logo-upload';
@@ -64,17 +66,23 @@ export const AdminChurchSettingsPage = () => {
   });
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-950">Church settings</h1>
-        <p className="mt-1 text-sm text-slate-600">Profile, withdrawal details, logo, and account password.</p>
-      </div>
+    <div className="space-y-5 animate-fade-in">
+      <PageHeader
+        title="Church settings"
+        description="Profile, withdrawal details, logo, and account password."
+      />
 
-      {message ? <div className="rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{message}</div> : null}
-      {churchQuery.isError ? <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">Unable to load church settings.</div> : null}
+      {message ? (
+        <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900">{message}</div>
+      ) : null}
+      {churchQuery.isError ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Unable to load church settings.
+        </div>
+      ) : null}
 
       <form
-        className="rounded border border-slate-200 bg-white p-4 shadow-sm"
+        className="card card-pad"
         onSubmit={(event) => {
           event.preventDefault();
           if (!isReadonly) {
@@ -82,37 +90,73 @@ export const AdminChurchSettingsPage = () => {
           }
         }}
       >
-        <h2 className="text-base font-semibold text-slate-950">Profile</h2>
+        <h2 className="text-base font-semibold text-ink">Profile</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Name</span>
-            <input disabled={isReadonly} value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} className="w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-50" />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Phone</span>
-            <input disabled={isReadonly} value={profile.phone} onChange={(event) => setProfile({ ...profile, phone: event.target.value })} className="w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-50" />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Email</span>
-            <input disabled={isReadonly} value={profile.email} onChange={(event) => setProfile({ ...profile, email: event.target.value })} className="w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-50" />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Withdrawal method</span>
-            <select disabled={isReadonly} value={profile.withdrawal_method} onChange={(event) => setProfile({ ...profile, withdrawal_method: event.target.value as AdminChurch['withdrawal_method'] })} className="w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-50">
-              <option value="phone">Phone</option>
-              <option value="till">Till</option>
-              <option value="paybill">Paybill</option>
-            </select>
-          </label>
-          <label className="text-sm sm:col-span-2">
-            <span className="mb-1 block font-medium text-slate-700">Withdrawal number</span>
-            <input disabled={isReadonly} value={profile.withdrawal_number} onChange={(event) => setProfile({ ...profile, withdrawal_number: event.target.value })} className="w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-50" />
-          </label>
+          <Input
+            label="Name"
+            disabled={isReadonly}
+            value={profile.name}
+            onChange={(event) => setProfile({ ...profile, name: event.target.value })}
+          />
+          <PhoneInput
+            label="Phone"
+            value={profile.phone}
+            onChange={(phone) => setProfile({ ...profile, phone })}
+            disabled={isReadonly}
+            autoComplete="tel"
+          />
+          <Input
+            label="Email"
+            type="email"
+            disabled={isReadonly}
+            value={profile.email}
+            onChange={(event) => setProfile({ ...profile, email: event.target.value })}
+          />
+          <Select
+            label="Withdrawal method"
+            disabled={isReadonly}
+            value={profile.withdrawal_method}
+            onChange={(event) => {
+              const method = event.target.value as AdminChurch['withdrawal_method'];
+              setProfile({
+                ...profile,
+                withdrawal_method: method,
+                withdrawal_number: method === profile.withdrawal_method ? profile.withdrawal_number : ''
+              });
+            }}
+          >
+            <option value="phone">Phone</option>
+            <option value="till">Till</option>
+            <option value="paybill">Paybill</option>
+          </Select>
+          {profile.withdrawal_method === 'phone' ? (
+            <div className="sm:col-span-2">
+              <PhoneInput
+                label="Withdrawal phone number"
+                value={profile.withdrawal_number}
+                onChange={(phone) => setProfile({ ...profile, withdrawal_number: phone })}
+                disabled={isReadonly}
+                autoComplete="tel"
+              />
+            </div>
+          ) : (
+            <div className="sm:col-span-2">
+              <Input
+                label={profile.withdrawal_method === 'till' ? 'Till number' : 'Paybill number'}
+                disabled={isReadonly}
+                inputMode="numeric"
+                value={profile.withdrawal_number}
+                onChange={(event) =>
+                  setProfile({ ...profile, withdrawal_number: event.target.value.replace(/\D/g, '') })
+                }
+              />
+            </div>
+          )}
         </div>
         {!isReadonly ? (
-          <button type="submit" disabled={profileMutation.isPending} className="mt-4 rounded bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-50">
-            {profileMutation.isPending ? 'Saving...' : 'Save settings'}
-          </button>
+          <Button type="submit" className="mt-4" loading={profileMutation.isPending}>
+            Save settings
+          </Button>
         ) : null}
       </form>
 
@@ -125,43 +169,52 @@ export const AdminChurchSettingsPage = () => {
 
       {!isReadonly ? (
         <form
-          className="rounded border border-slate-200 bg-white p-4 shadow-sm"
+          className="card card-pad"
           onSubmit={(event) => {
             event.preventDefault();
             passwordMutation.mutate(passwords);
           }}
         >
-          <h2 className="text-base font-semibold text-slate-950">Change password</h2>
+          <h2 className="text-base font-semibold text-ink">Change password</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Current password</span>
-              <input type="password" value={passwords.current_password} onChange={(event) => setPasswords({ ...passwords, current_password: event.target.value })} className="w-full rounded border border-slate-300 px-3 py-2" />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">New password</span>
-              <input type="password" value={passwords.password} onChange={(event) => setPasswords({ ...passwords, password: event.target.value })} className="w-full rounded border border-slate-300 px-3 py-2" />
-            </label>
+            <Input
+              label="Current password"
+              type="password"
+              value={passwords.current_password}
+              onChange={(event) => setPasswords({ ...passwords, current_password: event.target.value })}
+            />
+            <Input
+              label="New password"
+              type="password"
+              value={passwords.password}
+              onChange={(event) => setPasswords({ ...passwords, password: event.target.value })}
+            />
           </div>
-          <button type="submit" disabled={passwordMutation.isPending || passwords.current_password.length === 0 || passwords.password.length < 8} className="mt-4 rounded bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-50">
-            {passwordMutation.isPending ? 'Changing...' : 'Change password'}
-          </button>
+          <Button
+            type="submit"
+            className="mt-4"
+            loading={passwordMutation.isPending}
+            disabled={passwords.current_password.length === 0 || passwords.password.length < 8}
+          >
+            Change password
+          </Button>
         </form>
       ) : null}
 
-      <section className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-950">Recent audit activity</h2>
+      <Card>
+        <h2 className="text-base font-semibold text-ink">Recent audit activity</h2>
         <div className="mt-3 divide-y divide-slate-100">
           {auditLogs.slice(0, 8).map((log) => (
             <div key={log.id} className="py-3 text-sm">
-              <p className="font-medium text-slate-800">{log.action}</p>
-              <p className="text-slate-500">
+              <p className="font-medium text-ink">{log.action}</p>
+              <p className="text-ink-muted">
                 {log.actor_role} · {log.actor_id} · {new Date(log.created_at).toLocaleString('en-KE')}
               </p>
             </div>
           ))}
-          {auditLogs.length === 0 ? <p className="text-sm text-slate-500">No audit activity yet.</p> : null}
+          {auditLogs.length === 0 ? <p className="text-sm text-ink-muted">No audit activity yet.</p> : null}
         </div>
-      </section>
+      </Card>
     </div>
   );
 };

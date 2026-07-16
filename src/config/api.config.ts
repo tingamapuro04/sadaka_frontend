@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
   churchOtpRequest: '/api/auth/otp/request',
   churchOtpVerify: '/api/auth/otp/verify',
   authMe: '/api/auth/me',
+  authLogout: '/api/auth/logout',
   usernameAvailability: (username: string) =>
     `/api/churches/availability?username=${encodeURIComponent(username)}`,
   adminDashboard: '/api/admin/dashboard',
@@ -46,6 +47,7 @@ export const API_ENDPOINTS = {
   sadakaLoginVerify: '/api/sadaka/auth/login/verify',
   sadakaOtpRequest: '/api/sadaka/auth/otp/request',
   sadakaOtpVerify: '/api/sadaka/auth/otp/verify',
+  sadakaLogout: '/api/sadaka/auth/logout',
   sadakaDashboard: '/api/sadaka/dashboard',
   sadakaChurches: '/api/sadaka/churches',
   sadakaChurch: (id: string) => `/api/sadaka/churches/${encodeURIComponent(id)}`,

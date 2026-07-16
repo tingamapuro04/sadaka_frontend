@@ -35,8 +35,8 @@ export const SadakaChurchesPage = () => {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Churches</h1>
-          <p className="mt-1 text-sm text-slate-600">Search across platform balances and volume totals.</p>
+          <h1 className="page-title">Churches</h1>
+          <p className="page-subtitle">Search across platform balances and volume totals.</p>
         </div>
         <label className="text-sm">
           <span className="mb-1 block font-medium text-slate-700">Search</span>
@@ -55,7 +55,7 @@ export const SadakaChurchesPage = () => {
       {churchesQuery.isLoading ? <div className="rounded border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading churches...</div> : null}
       {churchesQuery.isError ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load churches.</div> : null}
 
-      <section className="rounded border border-slate-200 bg-white shadow-sm">
+      <section className="card">
         <div className="divide-y divide-slate-100">
           {!churchesQuery.isLoading && pagedChurches.length === 0 ? (
             <p className="p-4 text-sm text-slate-500">No churches match the current search.</p>

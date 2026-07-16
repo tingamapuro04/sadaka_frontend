@@ -12,6 +12,8 @@ type EventPaymentFormProps = {
   error?: string | null;
 };
 
+const fieldClass = 'field-control';
+
 export const EventPaymentForm = ({
   isSubmitting,
   platformFeeKes = TRANSACTION_FEE_KES,
@@ -62,125 +64,123 @@ export const EventPaymentForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       {error ? (
         <div
           role="alert"
           aria-live="assertive"
-          className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-medium text-red-700"
+          className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
         >
           {error}
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-950">
-        <p className="font-semibold">KES {platformFeeKes} platform fee</p>
-        <p className="mt-1 text-xs leading-relaxed text-emerald-900/90 sm:text-sm">
-          Added on top of your contribution. The church receives your gift amount; the fee is retained by Sadaka. Secured via M-Pesa.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="event_payer_name" className="text-sm font-semibold text-slate-700">
-          Your Name (Optional)
-        </label>
-        <input
-          id="event_payer_name"
-          type="text"
-          autoComplete="name"
-          className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-          placeholder="Jane Doe"
-          disabled={isSubmitting}
-          {...register('payer_name')}
-        />
-      </div>
-
-      <Controller
-        name="payer_phone"
-        control={control}
-        render={({ field }) => (
-          <PhoneInput
-            label="M-Pesa Phone Number"
-            value={field.value}
-            onChange={field.onChange}
+      <div className="space-y-3">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="event_payer_name" className="text-xs font-medium text-slate-600">
+            Name <span className="font-normal text-slate-400">(optional)</span>
+          </label>
+          <input
+            id="event_payer_name"
+            type="text"
+            autoComplete="name"
+            className={fieldClass}
+            placeholder="Jane Doe"
             disabled={isSubmitting}
-            error={errors.payer_phone?.message}
+            {...register('payer_name')}
           />
-        )}
-      />
+        </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="event_amount" className="text-sm font-semibold text-slate-700">
-          Amount (KES)
-        </label>
-        <input
-          id="event_amount"
-          type="number"
-          min={1}
-          step={1}
-          inputMode="numeric"
-          className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-          placeholder="500"
-          disabled={isSubmitting}
-          {...register('amount')}
+        <Controller
+          name="payer_phone"
+          control={control}
+          render={({ field }) => (
+            <PhoneInput
+              label="M-Pesa number"
+              value={field.value}
+              onChange={field.onChange}
+              disabled={isSubmitting}
+              error={errors.payer_phone?.message}
+              compact
+            />
+          )}
         />
-        {errors.amount ? (
-          <span className="text-xs font-medium text-red-500">{errors.amount.message}</span>
-        ) : (
-          <span className="text-xs text-slate-500">Enter a whole-number amount in Kenyan Shillings.</span>
-        )}
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="event_amount" className="text-xs font-medium text-slate-600">
+            Amount (KES)
+          </label>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-xs text-slate-400">
+              KES
+            </span>
+            <input
+              id="event_amount"
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className={`${fieldClass} pl-10 tabular-nums`}
+              placeholder="500"
+              disabled={isSubmitting}
+              {...register('amount')}
+            />
+          </div>
+          {errors.amount ? (
+            <span className="text-xs font-medium text-red-500">{errors.amount.message}</span>
+          ) : null}
+        </div>
       </div>
 
       <div
         role="status"
         aria-live="polite"
         aria-label="Payment summary"
-        className="rounded-2xl border border-slate-200 bg-slate-900 p-5 text-white shadow-lg"
+        className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3"
       >
-        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">Payment Summary</h3>
-        <div className="mt-4 space-y-2 text-sm">
-          <div className="flex justify-between text-slate-300">
-            <span>Contribution</span>
-            <span className="font-semibold">{formatKesCurrency(amountValue)}</span>
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <div className="min-w-0 text-slate-500">
+            <span className="tabular-nums">{formatKesCurrency(amountValue)}</span>
+            <span className="mx-1.5 text-slate-300">·</span>
+            <span>+ {amountValue > 0 ? formatKesCurrency(fee) : 'KES 0'} fee</span>
           </div>
-          <div className="flex justify-between text-slate-300">
-            <span>Platform Fee</span>
-            <span className="font-semibold">
-              {amountValue > 0 ? formatKesCurrency(fee) : 'KES 0'}
-            </span>
-          </div>
-          <div className="my-3 flex items-baseline justify-between border-t border-slate-800 pt-3">
-            <span className="text-base font-medium text-slate-200">Total Amount</span>
-            <span className="text-2xl font-extrabold text-emerald-400">
-              {formatKesCurrency(total)}
-            </span>
+          <div className="shrink-0 text-right">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Total</p>
+            <p className="text-lg font-bold tabular-nums text-slate-900">{formatKesCurrency(total)}</p>
           </div>
         </div>
         {amountValue > 0 ? (
-          <div className="mt-4 rounded-xl border border-slate-800 bg-slate-800/80 p-3 text-center">
-            <p className="text-xs font-medium leading-relaxed text-emerald-300/90">
-              KES {platformFeeKes} fee is added by Sadaka.
-            </p>
-          </div>
+          <p className="mt-1.5 text-[11px] text-slate-400">
+            Includes KES {platformFeeKes} platform fee
+          </p>
         ) : null}
-      </div>
-
-      <div className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-950">
-        <p className="font-semibold">Before you pay</p>
-        <ol className="mt-1 list-decimal space-y-1 pl-4 text-xs leading-relaxed text-sky-900 sm:text-sm">
-          <li>Confirm your M-Pesa number is correct and has float.</li>
-          <li>Tap <span className="font-semibold">Pay Now</span> to receive an STK prompt.</li>
-          <li>Enter your PIN on the phone and keep this page open.</li>
-        </ol>
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting || amountValue < 1}
-        className="w-full rounded-xl bg-emerald-600 px-4 py-3.5 text-base font-bold text-white shadow-md transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-colors hover:bg-brand-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
       >
-        {isSubmitting ? 'Sending M-Pesa prompt…' : 'Pay Now'}
+        {isSubmitting ? (
+          <>
+            <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24" aria-hidden>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            Sending prompt…
+          </>
+        ) : (
+          'Pay Now'
+        )}
       </button>
+
+      <p className="text-center text-[11px] leading-relaxed text-slate-400">
+        Includes KES {platformFeeKes} platform fee · STK prompt on your phone
+      </p>
     </form>
   );
 };

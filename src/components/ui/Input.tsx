@@ -17,9 +17,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label ? (
-          <label htmlFor={inputId} className="text-sm font-semibold text-slate-700">
+          <label htmlFor={inputId} className="field-label">
             {label}
-            {optional ? <span className="ml-1 font-normal text-slate-400">(optional)</span> : null}
+            {optional ? <span className="ml-1 font-normal text-ink-subtle">(optional)</span> : null}
           </label>
         ) : null}
         <div className="relative">
@@ -28,15 +28,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             aria-invalid={Boolean(error)}
             aria-describedby={describedBy}
-            className={`w-full rounded-lg border bg-white px-3 py-2.5 text-slate-900 shadow-sm transition focus:outline-none focus:ring-2 disabled:bg-slate-50 ${
-              error
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                : 'border-slate-300 focus:border-emerald-500 focus:ring-emerald-500/20'
-            } ${trailing ? 'pr-10' : ''} ${className}`}
+            className={`field-control ${error ? 'field-control-error' : ''} ${trailing ? 'pr-10' : ''} ${className}`}
             {...rest}
           />
           {trailing ? (
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-ink-subtle">
               {trailing}
             </div>
           ) : null}
@@ -46,7 +42,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {error}
           </span>
         ) : hint ? (
-          <span id={`${inputId}-hint`} className="text-xs text-slate-500">
+          <span id={`${inputId}-hint`} className="text-xs text-ink-muted">
             {hint}
           </span>
         ) : null}

@@ -20,8 +20,8 @@ const renderPage = () =>
   );
 
 const fillCredentials = () => {
-  fireEvent.change(screen.getByPlaceholderText('254712345678'), {
-    target: { value: '0712345678' }
+  fireEvent.change(screen.getByPlaceholderText('712345678'), {
+    target: { value: '712345678' }
   });
   fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Sadaka@123' } });
 };

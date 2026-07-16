@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { StatusBadge } from '../../../components/ui';
+import { Card, PageHeader, StatCard, StatusBadge } from '../../../components/ui';
 import { useAuth } from '../../../hooks/useAuth';
 import { formatDate, formatKesCurrency } from '../../../utils/formatters';
 import { adminQueryKeys, fetchDashboard, fetchEvents, fetchTransactions } from '../api';
@@ -11,26 +11,26 @@ const BreakdownList = ({ title, items, tone }: { title: string; items: AdminBrea
   const max = Math.max(...items.map((item) => item.total), 1);
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-base font-semibold text-slate-950">{title}</h2>
+    <Card>
+      <h2 className="text-base font-semibold text-ink">{title}</h2>
       <div className="mt-4 space-y-3">
-        {items.length === 0 ? <p className="text-sm text-slate-500">No data yet.</p> : null}
+        {items.length === 0 ? <p className="text-sm text-ink-muted">No data yet.</p> : null}
         {items.map((item) => (
           <div key={`${title}-${item.category_id ?? item.group_id ?? item.name}`}>
             <div className="mb-1 flex items-center justify-between gap-3 text-sm">
               <span className="truncate font-medium text-slate-700">{item.name}</span>
-              <span className="shrink-0 text-slate-600">{formatKesCurrency(item.total)}</span>
+              <span className="shrink-0 tabular-nums text-slate-600">{formatKesCurrency(item.total)}</span>
             </div>
-            <div className="h-2 rounded bg-slate-100">
+            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
               <div
-                className={tone === 'emerald' ? 'h-2 rounded bg-emerald-600' : 'h-2 rounded bg-sky-600'}
+                className={tone === 'emerald' ? 'h-2 rounded-full bg-brand-600' : 'h-2 rounded-full bg-sky-500'}
                 style={{ width: `${Math.max((item.total / max) * 100, 4)}%` }}
               />
             </div>
           </div>
         ))}
       </div>
-    </section>
+    </Card>
   );
 };
 
@@ -67,7 +67,7 @@ export const AdminDashboardPage = () => {
 
   if (dashboardQuery.isLoading) {
     return (
-      <div className="rounded border border-slate-200 bg-white p-6 text-sm text-slate-600" role="status">
+      <div className="card card-pad text-sm text-ink-muted" role="status">
         Loading dashboard…
       </div>
     );
@@ -75,7 +75,7 @@ export const AdminDashboardPage = () => {
 
   if (dashboardQuery.isError) {
     return (
-      <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
         Unable to load dashboard data. Please refresh and try again.
       </div>
     );
@@ -83,8 +83,9 @@ export const AdminDashboardPage = () => {
 
   if (!dashboard) return null;
 
-  const cards = [
-    { label: 'Total income', value: formatKesCurrency(dashboard.total_income), hint: 'All paid gifts' },
+  type Metric = { label: string; value: string; hint: string; accent?: 'brand' | 'neutral' | 'sky' };
+  const cards: Metric[] = [
+    { label: 'Total income', value: formatKesCurrency(dashboard.total_income), hint: 'All paid gifts', accent: 'brand' },
     {
       label: 'Today',
       value: dashboard.transaction_counts.today.toLocaleString('en-KE'),
@@ -106,7 +107,8 @@ export const AdminDashboardPage = () => {
     cards.unshift({
       label: 'Available balance',
       value: formatKesCurrency(dashboard.available_balance),
-      hint: 'Ready to withdraw'
+      hint: 'Ready to withdraw',
+      accent: 'brand'
     });
   }
 
@@ -122,45 +124,45 @@ export const AdminDashboardPage = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-950">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Overview of giving. Figures auto-refresh every 30 seconds.
-        </p>
-      </div>
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Dashboard"
+        description="Overview of giving. Figures auto-refresh every 30 seconds."
+      />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5" aria-label="Key metrics">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">{card.label}</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">{card.value}</p>
-            <p className="mt-1 text-xs text-slate-400">{card.hint}</p>
-          </div>
+          <StatCard
+            key={card.label}
+            label={card.label}
+            value={card.value}
+            hint={card.hint}
+            accent={card.accent ?? 'neutral'}
+          />
         ))}
       </section>
 
       <section aria-label="Quick actions">
-        <h2 className="text-base font-semibold text-slate-950">Quick actions</h2>
+        <h2 className="text-base font-semibold text-ink">Quick actions</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {shortcuts.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+              className="card card-pad transition hover:border-brand-200 hover:shadow-card-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
             >
-              <p className="font-semibold text-slate-900">{item.label}</p>
-              <p className="mt-1 text-xs text-slate-500">{item.desc}</p>
+              <p className="font-semibold text-ink">{item.label}</p>
+              <p className="mt-1 text-xs text-ink-muted">{item.desc}</p>
             </Link>
           ))}
         </div>
       </section>
 
       {activeEvents.length > 0 ? (
-        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm" aria-label="Active events">
+        <Card aria-label="Active events">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-slate-950">Active events</h2>
-            <Link to="/admin/events" className="text-sm font-semibold text-emerald-700 hover:underline">
+            <h2 className="text-base font-semibold text-ink">Active events</h2>
+            <Link to="/admin/events" className="text-sm font-semibold text-brand-700 hover:underline">
               View all
             </Link>
           </div>
@@ -170,11 +172,11 @@ export const AdminDashboardPage = () => {
                 <div>
                   <Link
                     to={`/admin/events/${event.id}`}
-                    className="font-medium text-slate-900 hover:text-emerald-700 hover:underline"
+                    className="font-medium text-ink hover:text-brand-700 hover:underline"
                   >
                     {event.title}
                   </Link>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-ink-muted">
                     Raised {formatKesCurrency(event.totals?.paid_gross ?? 0)}
                     {event.target_amount != null
                       ? ` of ${formatKesCurrency(event.target_amount)}`
@@ -185,15 +187,15 @@ export const AdminDashboardPage = () => {
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       ) : isSuper ? (
-        <section className="rounded-xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-600">
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white p-4 text-sm text-ink-muted">
           No active events.{' '}
-          <Link to="/admin/events" className="font-semibold text-emerald-700 hover:underline">
+          <Link to="/admin/events" className="font-semibold text-brand-700 hover:underline">
             Create a fundraiser
           </Link>{' '}
           to share a dedicated payment link.
-        </section>
+        </div>
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -201,32 +203,32 @@ export const AdminDashboardPage = () => {
         <BreakdownList title="Group breakdown" items={dashboard.by_group} tone="sky" />
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h2 className="text-base font-semibold text-slate-950">Recent transactions</h2>
-          <Link to="/admin/transactions" className="text-sm font-semibold text-emerald-700 hover:underline">
+      <Card padded={false}>
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 sm:px-5">
+          <h2 className="text-base font-semibold text-ink">Recent transactions</h2>
+          <Link to="/admin/transactions" className="text-sm font-semibold text-brand-700 hover:underline">
             View all
           </Link>
         </div>
         <div className="divide-y divide-slate-100">
           {recentTransactions.length === 0 ? (
-            <p className="p-4 text-sm text-slate-500">No recent transactions.</p>
+            <p className="p-4 text-sm text-ink-muted">No recent transactions.</p>
           ) : null}
           {recentTransactions.map((transaction) => (
             <div
               key={transaction.id}
-              className="grid gap-2 p-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center"
+              className="grid gap-2 p-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:px-5"
             >
               <div>
-                <p className="font-medium text-slate-900">
+                <p className="font-medium text-ink">
                   {transaction.payer_name || transaction.payer_phone}
                 </p>
-                <p className="text-slate-500">
+                <p className="text-ink-muted">
                   {transaction.mpesa_ref || 'No M-PESA ref'} · {formatDate(transaction.created_at)}
                 </p>
               </div>
               <div className="text-left sm:text-right">
-                <p className="font-semibold text-slate-950">
+                <p className="font-semibold tabular-nums text-ink">
                   {formatKesCurrency(transaction.total_amount)}
                 </p>
                 <StatusBadge label={String(transaction.status)} />
@@ -234,7 +236,7 @@ export const AdminDashboardPage = () => {
             </div>
           ))}
         </div>
-      </section>
+      </Card>
     </div>
   );
 };

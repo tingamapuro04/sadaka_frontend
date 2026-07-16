@@ -6,10 +6,9 @@ export const ExportButton = ({ filters }: { filters: TransactionFiltersState }) 
     <a
       href={transactionExportUrl(filters)}
       download
-      className="inline-flex rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
+      className="inline-flex min-h-touch items-center justify-center rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
     >
       Export CSV
     </a>
   );
 };
-

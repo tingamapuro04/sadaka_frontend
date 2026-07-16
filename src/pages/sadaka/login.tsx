@@ -35,18 +35,15 @@ export const SadakaLoginPage = () => {
   });
 
   return (
-    <div className="mx-auto mt-10 max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 px-6 py-8 text-white">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">Sadaka Platform</p>
-        <h1 className="mt-2 text-3xl font-semibold">Super Admin Login</h1>
-        <p className="mt-2 text-sm text-slate-300">Platform-wide monitoring and withdrawal control.</p>
-      </div>
-      <div className="p-6">
-        <p className="mb-6 text-sm text-slate-600">
-          {step === 'credentials'
-            ? 'Use the dedicated platform credentials. When SMS login is enabled, we will send a one-time code.'
-            : 'Enter the 6-digit code we sent to your phone.'}
-        </p>
+    <div>
+      <p className="text-2xs font-semibold uppercase tracking-wider text-brand-700">Platform</p>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Super Admin Login</h1>
+      <p className="mt-2 text-sm text-ink-muted">
+        {step === 'credentials'
+          ? 'Platform-wide monitoring and withdrawal control. When SMS login is enabled, we will send a one-time code.'
+          : 'Enter the 6-digit code we sent to your phone.'}
+      </p>
+      <div className="mt-6">
         <LoginForm
           mode={step}
           isSubmitting={isSubmitting}

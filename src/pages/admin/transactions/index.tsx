@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import { Button, PageHeader } from '../../../components/ui';
 import { adminQueryKeys, fetchCategories, fetchTransactions } from '../api';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import type { AdminListItem, AdminTransaction, TransactionFiltersState } from '../types';
@@ -66,14 +67,12 @@ export const AdminTransactionsPage = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Transactions</h1>
-          <p className="mt-1 text-sm text-slate-600">Filter, inspect, sort, and export church payments.</p>
-        </div>
-        <ExportButton filters={debouncedFilters} />
-      </div>
+    <div className="space-y-5 animate-fade-in">
+      <PageHeader
+        title="Transactions"
+        description="Filter, inspect, sort, and export church payments."
+        actions={<ExportButton filters={debouncedFilters} />}
+      />
 
       <TransactionFilters
         categories={categories}
@@ -83,38 +82,40 @@ export const AdminTransactionsPage = () => {
       />
 
       {transactionsQuery.isError ? (
-        <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
           Unable to load transactions. Check your filters and try again.
         </div>
       ) : null}
 
       {transactionsQuery.isLoading ? (
-        <div className="rounded border border-slate-200 bg-white p-6 text-sm text-slate-600" role="status">
+        <div className="card card-pad text-sm text-ink-muted" role="status">
           Loading transactions…
         </div>
       ) : (
         <>
           <TransactionTable transactions={sortedTransactions} filters={filters} onSort={sortBy} />
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
-            <button
-              type="button"
+          <div className="card flex items-center justify-between px-4 py-3 text-sm">
+            <Button
+              variant="secondary"
+              size="sm"
               disabled={filters.page <= 1 || transactionsQuery.isFetching}
               onClick={() => setFilters((current) => ({ ...current, page: Math.max(current.page - 1, 1) }))}
-              className="min-h-[40px] rounded-lg border border-slate-300 px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Previous
-            </button>
-            <span className="text-slate-600">
-              Page {transactionsQuery.data?.page ?? filters.page} · {transactionsQuery.data?.total ?? 0} records
+            </Button>
+            <span className="text-ink-muted">
+              Page {transactionsQuery.data?.page ?? filters.page}
+              <span className="mx-1.5 text-slate-300">·</span>
+              {transactionsQuery.data?.total ?? 0} records
             </span>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               disabled={sortedTransactions.length === 0 || transactionsQuery.isFetching}
               onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}
-              className="rounded border border-slate-300 px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
-            </button>
+            </Button>
           </div>
         </>
       )}

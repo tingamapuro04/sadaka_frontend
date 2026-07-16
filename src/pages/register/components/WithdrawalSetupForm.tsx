@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { PhoneInput } from '../../../components/shared/PhoneInput';
 
 type WithdrawalValues = {
   withdrawal_method: 'phone' | 'till' | 'paybill';
@@ -16,7 +17,6 @@ type WithdrawalSetupFormProps = {
   fieldErrors?: Record<string, string>;
 };
 
-
 export const WithdrawalSetupForm = ({
   values,
   disabled,
@@ -30,6 +30,7 @@ export const WithdrawalSetupForm = ({
   const numberId = useId();
   const fileId = useId();
   const previewUrl = values.logo ? URL.createObjectURL(values.logo) : null;
+  const isPhoneMethod = values.withdrawal_method === 'phone';
 
   const update = (key: keyof WithdrawalValues, value: string | File | null) => {
     onChange({ ...values, [key]: value });
@@ -46,7 +47,15 @@ export const WithdrawalSetupForm = ({
           id={methodId}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
           value={values.withdrawal_method}
-          onChange={(event) => update('withdrawal_method', event.target.value as WithdrawalValues['withdrawal_method'])}
+          onChange={(event) => {
+            const method = event.target.value as WithdrawalValues['withdrawal_method'];
+            onChange({
+              ...values,
+              withdrawal_method: method,
+              // Clear number when switching between phone and till/paybill formats
+              withdrawal_number: ''
+            });
+          }}
           disabled={disabled}
         >
           <option value="phone">Phone</option>
@@ -57,26 +66,40 @@ export const WithdrawalSetupForm = ({
           Choose the withdrawal method your church will use for funds transfer.
         </p>
       </div>
-      <div>
-        <label htmlFor={numberId} className="mb-2 block text-sm font-semibold text-slate-700">
-          Withdrawal number
-        </label>
-        <input
-          id={numberId}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
-          placeholder="Withdrawal number"
+
+      {isPhoneMethod ? (
+        <PhoneInput
+          label="Withdrawal phone number"
           value={values.withdrawal_number}
-          aria-invalid={Boolean(fieldErrors?.withdrawal_number)}
-          aria-describedby={fieldErrors?.withdrawal_number ? `${numberId}-error` : undefined}
-          onChange={(event) => update('withdrawal_number', event.target.value)}
+          onChange={(phone) => update('withdrawal_number', phone)}
           disabled={disabled}
+          error={fieldErrors?.withdrawal_number}
+          autoComplete="tel"
         />
-        {fieldErrors?.withdrawal_number ? (
-          <p id={`${numberId}-error`} className="mt-1 text-xs text-red-600">
-            {fieldErrors.withdrawal_number}
-          </p>
-        ) : null}
-      </div>
+      ) : (
+        <div>
+          <label htmlFor={numberId} className="mb-2 block text-sm font-semibold text-slate-700">
+            {values.withdrawal_method === 'till' ? 'Till number' : 'Paybill number'}
+          </label>
+          <input
+            id={numberId}
+            inputMode="numeric"
+            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            placeholder={values.withdrawal_method === 'till' ? 'e.g. 123456' : 'e.g. 123456'}
+            value={values.withdrawal_number}
+            aria-invalid={Boolean(fieldErrors?.withdrawal_number)}
+            aria-describedby={fieldErrors?.withdrawal_number ? `${numberId}-error` : undefined}
+            onChange={(event) => update('withdrawal_number', event.target.value.replace(/\D/g, ''))}
+            disabled={disabled}
+          />
+          {fieldErrors?.withdrawal_number ? (
+            <p id={`${numberId}-error`} className="mt-1 text-xs text-red-600">
+              {fieldErrors.withdrawal_number}
+            </p>
+          ) : null}
+        </div>
+      )}
+
       <div>
         <label htmlFor={fileId} className="mb-2 block text-sm font-semibold text-slate-700">
           Church logo (optional)

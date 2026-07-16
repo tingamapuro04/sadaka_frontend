@@ -60,7 +60,12 @@ export const useChurchRegistration = () => {
       formData.append('phone', normalizePhone(payload.phone.trim()));
       formData.append('password', payload.password);
       formData.append('withdrawal_method', payload.withdrawal_method);
-      formData.append('withdrawal_number', payload.withdrawal_number.trim());
+      formData.append(
+        'withdrawal_number',
+        payload.withdrawal_method === 'phone'
+          ? normalizePhone(payload.withdrawal_number.trim())
+          : payload.withdrawal_number.trim()
+      );
 
       if (payload.email.trim()) {
         formData.append('email', payload.email.trim());

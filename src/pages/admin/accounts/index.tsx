@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RoleBasedGuard } from '../../../components/auth/RoleBasedGuard';
+import { PhoneInput } from '../../../components/shared/PhoneInput';
 import { adminQueryKeys, createAccount, deleteAccount, fetchAccounts } from '../api';
 
 type AccountFormState = {
@@ -61,15 +62,15 @@ export const AdminAccountsPage = () => {
     >
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Admin accounts</h1>
-          <p className="mt-1 text-sm text-slate-600">Manage readonly church admin accounts.</p>
+          <h1 className="page-title">Admin accounts</h1>
+          <p className="page-subtitle">Manage readonly church admin accounts.</p>
         </div>
 
-        <section className="rounded border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="card card-pad">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-base font-semibold text-slate-950">Create readonly account</h2>
-              <p className="mt-1 text-sm text-slate-600">You can create up to two readonly accounts.</p>
+              <p className="page-subtitle">You can create up to two readonly accounts.</p>
             </div>
             <span className="rounded bg-slate-100 px-3 py-1.5 text-sm text-slate-700">
               {accountsQuery.data?.length ?? 0}/2 created
@@ -77,17 +78,13 @@ export const AdminAccountsPage = () => {
           </div>
 
           <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={submit}>
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Phone</span>
-              <input
-                type="tel"
-                value={values.phone}
-                onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
-                placeholder="254712345678"
-                className="w-full rounded border border-slate-300 px-3 py-2"
-                disabled={createMutation.isPending || (accountsQuery.data?.length ?? 0) >= 2}
-              />
-            </label>
+            <PhoneInput
+              label="Phone"
+              value={values.phone}
+              onChange={(phone) => setValues((current) => ({ ...current, phone }))}
+              disabled={createMutation.isPending || (accountsQuery.data?.length ?? 0) >= 2}
+              autoComplete="tel"
+            />
             <label className="text-sm">
               <span className="mb-1 block font-medium text-slate-700">Password</span>
               <input
@@ -111,7 +108,7 @@ export const AdminAccountsPage = () => {
           </form>
         </section>
 
-        <section className="rounded border border-slate-200 bg-white shadow-sm">
+        <section className="card">
           <div className="border-b border-slate-200 px-4 py-3">
             <h2 className="text-base font-semibold text-slate-950">Readonly accounts</h2>
           </div>

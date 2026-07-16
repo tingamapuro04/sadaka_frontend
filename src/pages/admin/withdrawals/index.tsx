@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RoleBasedGuard } from '../../../components/auth/RoleBasedGuard';
-import { Button, ConfirmDialog, useToast } from '../../../components/ui';
+import { Button, ConfirmDialog, PageHeader, StatCard, useToast } from '../../../components/ui';
 import { env } from '../../../config/env.config';
 import { formatKesCurrency } from '../../../utils/formatters';
 import {
@@ -201,59 +201,63 @@ export const AdminWithdrawalsPage = () => {
     <RoleBasedGuard
       allow={['church_super_admin']}
       fallback={
-        <div className="rounded border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+        <div className="card card-pad text-sm text-ink-muted">
           Withdrawals are available to church super admins only.
         </div>
       }
     >
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-950">Withdrawals</h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Review withdrawal history and request new withdrawals from the available balance.
-            </p>
-          </div>
-          <Button
-            onClick={() => {
-              setError(null);
-              setOtpStep(false);
-              setIsFormOpen(true);
-            }}
-            disabled={
-              churchQuery.isLoading ||
-              dashboardQuery.isLoading ||
-              churchQuery.isError ||
-              dashboardQuery.isError ||
-              availableBalance === undefined
-            }
-          >
-            Request withdrawal
-          </Button>
-        </div>
+      <div className="space-y-5 animate-fade-in">
+        <PageHeader
+          title="Withdrawals"
+          description="Review withdrawal history and request new withdrawals from the available balance."
+          actions={
+            <Button
+              onClick={() => {
+                setError(null);
+                setOtpStep(false);
+                setIsFormOpen(true);
+              }}
+              disabled={
+                churchQuery.isLoading ||
+                dashboardQuery.isLoading ||
+                churchQuery.isError ||
+                dashboardQuery.isError ||
+                availableBalance === undefined
+              }
+            >
+              Request withdrawal
+            </Button>
+          }
+        />
 
-        <section className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">Available balance</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">
-              {availableBalance === undefined ? '—' : formatKesCurrency(availableBalance)}
-            </p>
-          </div>
-          <div className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">Withdrawal method</p>
-            <p className="mt-2 text-2xl font-semibold capitalize text-slate-950">
-              {churchQuery.data?.withdrawal_method ?? 'Unknown'}
-            </p>
-          </div>
-          <div className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">Destination number</p>
-            <p className="mt-2 text-xl font-semibold text-slate-950">{churchQuery.data?.withdrawal_number ?? '—'}</p>
-          </div>
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="Withdrawal summary">
+          <StatCard
+            label="Available balance"
+            value={availableBalance === undefined ? '—' : formatKesCurrency(availableBalance)}
+            accent="brand"
+            hint="Ready to withdraw"
+          />
+          <StatCard
+            label="Withdrawal method"
+            value={
+              <span className="capitalize">
+                {churchQuery.data?.withdrawal_method ?? 'Unknown'}
+              </span>
+            }
+          />
+          <StatCard
+            label="Destination number"
+            value={
+              <span className="text-lg sm:text-xl">
+                {churchQuery.data?.withdrawal_number ?? '—'}
+              </span>
+            }
+          />
         </section>
 
-        <section className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <p className="font-medium">Withdrawal processing mode</p>
-          <p className="mt-1">
+        <section className="rounded-xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p className="font-semibold">Withdrawal processing mode</p>
+          <p className="mt-1 text-amber-900/90">
             {withdrawalMode === 'instant'
               ? 'Instant mode is enabled for development and test environments.'
               : 'Scheduled mode is enabled. Withdrawals will run in the next processing window.'}
@@ -261,7 +265,7 @@ export const AdminWithdrawalsPage = () => {
         </section>
 
         {dashboardQuery.isError ? (
-          <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             Unable to load balance information. Please refresh and try again.
           </div>
         ) : null}

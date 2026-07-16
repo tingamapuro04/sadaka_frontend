@@ -215,16 +215,18 @@ export const RegisterPage = () => {
   const displayStep = step === 4 ? 4 : step;
 
   return (
-    <div className="mx-auto mt-8 max-w-xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="mx-auto max-w-form px-4 py-10 sm:px-6 sm:py-14">
+      <div className="card card-pad animate-fade-in sm:p-7">
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Register Your Church</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Set up your church details, admin account, and withdrawal method.
+          <p className="text-2xs font-semibold uppercase tracking-wider text-brand-700">Get started</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Register your church</h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            Set up church details, admin account, and withdrawal method.
             {step === 4 ? ' Verify the SMS code sent to your phone to finish.' : ''}
           </p>
         </div>
-        <Link to="/admin/login" className="text-sm text-blue-600 hover:text-blue-700">
+        <Link to="/admin/login" className="shrink-0 text-sm font-semibold text-brand-700 hover:underline">
           Already have an account? Login
         </Link>
       </div>
@@ -233,24 +235,24 @@ export const RegisterPage = () => {
           {Array.from({ length: totalSteps }, (_, i) => i + 1).map((stepIndex) => (
             <div
               key={stepIndex}
-              className={`flex min-w-[2.5rem] items-center justify-center rounded-full border px-3 py-2 text-sm font-semibold ${
+              className={`flex h-9 min-w-[2.25rem] items-center justify-center rounded-full border px-3 text-sm font-semibold ${
                 stepIndex === displayStep
-                  ? 'border-emerald-600 bg-emerald-600 text-white'
+                  ? 'border-brand-600 bg-brand-600 text-white shadow-soft'
                   : stepIndex < displayStep
-                    ? 'border-slate-300 bg-slate-100 text-slate-700'
+                    ? 'border-brand-200 bg-brand-50 text-brand-800'
                     : 'border-slate-200 bg-white text-slate-400'
               }`}
             >
               {stepIndex}
             </div>
           ))}
-          <div className="text-sm text-slate-500">
+          <div className="text-sm text-ink-muted">
             Step {displayStep} of {totalSteps}
           </div>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-emerald-600 transition-all"
+            className="h-full rounded-full bg-brand-600 transition-all"
             style={{ width: `${(displayStep / totalSteps) * 100}%` }}
           />
         </div>
@@ -316,6 +318,7 @@ export const RegisterPage = () => {
           onVerify={(code) => void verifyAndRegister(code)}
         />
       ) : null}
+      </div>
     </div>
   );
 };

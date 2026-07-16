@@ -32,8 +32,8 @@ const renderPage = () =>
     </AuthProvider>
   );
 
-const fillCredentials = (phone = '254712345678', password = 'OtpDemo@123') => {
-  fireEvent.change(screen.getByPlaceholderText('254712345678'), {
+const fillCredentials = (phone = '712345678', password = 'OtpDemo@123') => {
+  fireEvent.change(screen.getByPlaceholderText('712345678'), {
     target: { value: phone }
   });
   fireEvent.change(screen.getByLabelText('Password'), { target: { value: password } });

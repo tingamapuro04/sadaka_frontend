@@ -30,11 +30,11 @@ export const SadakaAuditLogsPage = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-950">Audit logs</h1>
-        <p className="mt-1 text-sm text-slate-600">Read-only platform-wide activity trail.</p>
+        <h1 className="page-title">Audit logs</h1>
+        <p className="page-subtitle">Read-only platform-wide activity trail.</p>
       </div>
 
-      <section className="grid gap-3 rounded border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
+      <section className="grid gap-3 card card-pad md:grid-cols-3">
         <label className="text-sm">
           <span className="mb-1 block font-medium text-slate-700">Action</span>
           <input value={action} onChange={(event) => setAction(event.target.value)} placeholder="withdrawal_created" className="w-full rounded border border-slate-300 px-3 py-2" />
@@ -52,7 +52,7 @@ export const SadakaAuditLogsPage = () => {
       {auditQuery.isLoading ? <div className="rounded border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading audit logs...</div> : null}
       {auditQuery.isError ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load audit logs.</div> : null}
 
-      <section className="rounded border border-slate-200 bg-white shadow-sm">
+      <section className="card">
         <div className="divide-y divide-slate-100">
           {!auditQuery.isLoading && filteredLogs.length === 0 ? (
             <p className="p-4 text-sm text-slate-500">No audit logs match the current filters.</p>

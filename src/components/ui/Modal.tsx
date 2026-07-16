@@ -134,7 +134,7 @@ export const Modal = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descId : undefined}
-        className={`max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-xl ${maxWidthClassName}`}
+        className={`max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 shadow-overlay sm:rounded-xl ${maxWidthClassName}`}
       >
         {onSubmit ? (
           <form

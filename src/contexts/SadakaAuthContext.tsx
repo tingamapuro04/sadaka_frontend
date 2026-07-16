@@ -1,4 +1,5 @@
 import { createContext, useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
 import { registerSadakaAuthHandlers } from '../lib/sadaka-axios';
 import type { UserRole } from '../types/common.types';
 
@@ -58,6 +59,14 @@ export const SadakaAuthProvider = ({ children }: PropsWithChildren) => {
     setToken(null);
     setRole(null);
     persist(null, null);
+
+    // Clear the shared httpOnly session cookie (login also sets sadaka_auth_token).
+    void fetch(`${API_BASE_URL}${API_ENDPOINTS.sadakaLogout}`, {
+      method: 'POST',
+      credentials: 'include'
+    }).catch(() => {
+      // Ignore network errors on logout
+    });
   }, [persist]);
 
   const login = useCallback(

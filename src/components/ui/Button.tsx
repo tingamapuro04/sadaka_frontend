@@ -7,27 +7,34 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   size?: Size;
   loading?: boolean;
+  fullWidth?: boolean;
   children: ReactNode;
 };
 
 const variantClass: Record<Variant, string> = {
-  primary: 'bg-slate-900 text-white hover:bg-slate-800 border border-transparent',
-  secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50',
-  danger: 'bg-red-600 text-white hover:bg-red-500 border border-transparent',
-  ghost: 'bg-transparent text-slate-700 border border-transparent hover:bg-slate-100',
-  success: 'bg-emerald-600 text-white hover:bg-emerald-500 border border-transparent'
+  primary:
+    'bg-brand-600 text-white hover:bg-brand-700 border border-transparent shadow-soft focus-visible:outline-brand-600',
+  secondary:
+    'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-soft focus-visible:outline-brand-600',
+  danger:
+    'bg-red-600 text-white hover:bg-red-500 border border-transparent focus-visible:outline-red-600',
+  ghost:
+    'bg-transparent text-slate-700 border border-transparent hover:bg-slate-100 focus-visible:outline-brand-600',
+  success:
+    'bg-brand-600 text-white hover:bg-brand-700 border border-transparent shadow-soft focus-visible:outline-brand-600'
 };
 
 const sizeClass: Record<Size, string> = {
-  sm: 'px-3 py-1.5 text-sm min-h-[36px]',
-  md: 'px-3.5 py-2 text-sm min-h-[40px]',
-  lg: 'px-4 py-3 text-sm font-semibold min-h-[44px]'
+  sm: 'px-3 py-1.5 text-sm min-h-[36px] rounded-lg',
+  md: 'px-3.5 py-2 text-sm min-h-[40px] rounded-lg',
+  lg: 'px-4 py-2.5 text-sm font-semibold min-h-touch rounded-xl'
 };
 
 export const Button = ({
   variant = 'primary',
   size = 'md',
   loading = false,
+  fullWidth = false,
   disabled,
   className = '',
   children,
@@ -39,7 +46,7 @@ export const Button = ({
     <button
       type={type}
       disabled={isDisabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 ${variantClass[variant]} ${sizeClass[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${variantClass[variant]} ${sizeClass[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
       {...rest}
     >
       {loading ? (

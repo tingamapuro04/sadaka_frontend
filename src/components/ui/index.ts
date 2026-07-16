@@ -1,5 +1,9 @@
 export { Button } from './Button';
 export { Input } from './Input';
+export { Select } from './Select';
+export { Card } from './Card';
+export { PageHeader } from './PageHeader';
+export { StatCard } from './StatCard';
 export { Modal } from './Modal';
 export { EmptyState } from './EmptyState';
 export { StatusBadge, statusToTone } from './StatusBadge';

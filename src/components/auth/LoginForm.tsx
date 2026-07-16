@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { OTP_CODE_LENGTH } from '../../config/constants';
+import { Button, Input } from '../ui';
+import { PhoneInput } from '../shared/PhoneInput';
 
 type LoginFormValues = {
   phone: string;
@@ -20,7 +22,6 @@ type LoginFormProps = {
   onResend?: () => void;
   resendCooldownSeconds?: number;
   isResending?: boolean;
-  /** Prefill phone when returning from OTP step */
   initialPhone?: string;
   onSubmit: (values: LoginFormValues) => Promise<void>;
 };
@@ -50,7 +51,6 @@ export const LoginForm = ({
   useEffect(() => {
     if (mode === 'otp') {
       setValues((prev) => ({ ...prev, otpCode: '' }));
-      // Focus after paint so the OTP field is ready for SMS autofill
       window.requestAnimationFrame(() => {
         otpInputRef.current?.focus();
       });
@@ -79,38 +79,25 @@ export const LoginForm = ({
     <form className="space-y-4" onSubmit={submit}>
       {mode === 'credentials' ? (
         <>
-          <div>
-            <label htmlFor="phone" className="mb-1 block text-sm font-medium text-slate-700">
-              Phone
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              autoComplete="tel"
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-              placeholder="254712345678"
-              value={values.phone}
-              onChange={(event) => handleChange('phone', event.target.value)}
-              disabled={busy}
-              required
-            />
-          </div>
+          <PhoneInput
+            label="Phone"
+            value={values.phone}
+            onChange={(phone) => handleChange('phone', phone)}
+            disabled={busy}
+            autoComplete="tel"
+            required
+          />
 
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-              Password
-            </label>
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-              value={values.password}
-              onChange={(event) => handleChange('password', event.target.value)}
-              disabled={busy}
-              required
-            />
-          </div>
+          <Input
+            id="password"
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            value={values.password}
+            onChange={(event) => handleChange('password', event.target.value)}
+            disabled={busy}
+            required
+          />
 
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
@@ -118,47 +105,44 @@ export const LoginForm = ({
               checked={showPassword}
               onChange={(event) => setShowPassword(event.target.checked)}
               disabled={busy}
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
             />
             Show password
           </label>
         </>
       ) : (
         <>
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="rounded-xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             <p className="font-medium">Enter the {OTP_CODE_LENGTH}-digit code we sent by SMS.</p>
-            {challengeMessage ? <p className="mt-1 text-amber-800">{challengeMessage}</p> : null}
+            {challengeMessage ? <p className="mt-1 text-amber-900/90">{challengeMessage}</p> : null}
           </div>
 
-          <div>
-            <label htmlFor="otpCode" className="mb-1 block text-sm font-medium text-slate-700">
-              Verification code
-            </label>
-            <input
-              ref={otpInputRef}
-              id="otpCode"
-              name="otpCode"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={OTP_CODE_LENGTH}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 tracking-[0.4em]"
-              placeholder="123456"
-              value={values.otpCode}
-              onChange={(event) =>
-                handleChange('otpCode', event.target.value.replace(/\D/g, '').slice(0, OTP_CODE_LENGTH))
-              }
-              disabled={busy}
-              required
-            />
-          </div>
+          <Input
+            ref={otpInputRef}
+            id="otpCode"
+            name="otpCode"
+            label="Verification code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={OTP_CODE_LENGTH}
+            className="tracking-[0.35em]"
+            placeholder="123456"
+            value={values.otpCode}
+            onChange={(event) =>
+              handleChange('otpCode', event.target.value.replace(/\D/g, '').slice(0, OTP_CODE_LENGTH))
+            }
+            disabled={busy}
+            required
+          />
 
           {onResend ? (
             <div className="flex items-center justify-between gap-2 text-sm">
-              <span className="text-slate-500">Didn&apos;t get the code?</span>
+              <span className="text-ink-muted">Didn&apos;t get the code?</span>
               <button
                 type="button"
                 onClick={() => void onResend()}
                 disabled={resendDisabled}
-                className="font-medium text-emerald-700 hover:text-emerald-800 disabled:cursor-not-allowed disabled:text-slate-400"
+                className="font-semibold text-brand-700 hover:text-brand-800 disabled:cursor-not-allowed disabled:text-slate-400"
               >
                 {isResending
                   ? 'Sending…'
@@ -178,26 +162,17 @@ export const LoginForm = ({
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-md bg-slate-900 px-4 py-2 text-white disabled:opacity-60"
-        >
+        <Button type="submit" loading={isSubmitting} fullWidth disabled={busy} size="lg">
           {isSubmitting
             ? mode === 'otp'
               ? 'Verifying…'
               : 'Signing in…'
             : (submitLabel ?? 'Sign in')}
-        </button>
+        </Button>
         {secondaryActionLabel && onSecondaryAction ? (
-          <button
-            type="button"
-            onClick={onSecondaryAction}
-            disabled={busy}
-            className="w-full rounded-md border border-slate-300 px-4 py-2 text-slate-700 disabled:opacity-60"
-          >
+          <Button type="button" variant="secondary" onClick={onSecondaryAction} disabled={busy} fullWidth>
             {secondaryActionLabel}
-          </button>
+          </Button>
         ) : null}
       </div>
     </form>

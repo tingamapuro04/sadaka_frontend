@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { PhoneInput } from '../../../components/shared/PhoneInput';
 
 type ChurchInfoValues = {
   name: string;
@@ -63,7 +64,6 @@ export const ChurchInfoForm = ({
 
   const nameId = useId();
   const usernameId = useId();
-  const phoneId = useId();
   const emailId = useId();
 
   return (
@@ -115,29 +115,14 @@ export const ChurchInfoForm = ({
           </p>
         ) : null}
       </div>
-      <div>
-        <label htmlFor={phoneId} className="mb-2 block text-sm font-semibold text-slate-700">
-          M-Pesa phone number
-        </label>
-        <input
-          id={phoneId}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
-          placeholder="254712345678"
-          value={values.phone}
-          aria-invalid={Boolean(fieldErrors?.phone)}
-          aria-describedby={fieldErrors?.phone ? `${phoneId}-error` : `${phoneId}-hint`}
-          onChange={(event) => update('phone', event.target.value)}
-          disabled={disabled}
-        />
-        <p id={`${phoneId}-hint`} className="mt-1 text-xs text-slate-500">
-          Use the mobile number that will receive M-Pesa notifications.
-        </p>
-        {fieldErrors?.phone ? (
-          <p id={`${phoneId}-error`} className="mt-1 text-xs text-red-600">
-            {fieldErrors.phone}
-          </p>
-        ) : null}
-      </div>
+      <PhoneInput
+        label="M-Pesa phone number"
+        value={values.phone}
+        onChange={(phone) => update('phone', phone)}
+        disabled={disabled}
+        error={fieldErrors?.phone}
+        autoComplete="tel"
+      />
       <div>
         <label htmlFor={emailId} className="mb-2 block text-sm font-semibold text-slate-700">
           Email address (optional)

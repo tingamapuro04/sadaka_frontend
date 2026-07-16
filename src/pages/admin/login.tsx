@@ -30,26 +30,28 @@ export const AdminLoginPage = () => {
   });
 
   return (
-    <div className="mx-auto mt-10 max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <h1 className="mb-2 text-2xl font-semibold text-slate-900">Church Admin Login</h1>
-      <p className="mb-6 text-sm text-slate-600">
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight text-ink">Church admin login</h1>
+      <p className="mt-2 text-sm text-ink-muted">
         {step === 'credentials'
           ? 'Use your registered phone number and password. When SMS login is enabled, we will send a one-time code.'
           : 'Enter the 6-digit code we sent to your phone.'}
       </p>
-      <LoginForm
-        mode={step}
-        isSubmitting={isSubmitting}
-        isResending={isResending}
-        error={error}
-        challengeMessage={challengeMessage}
-        submitLabel={step === 'otp' ? 'Verify code' : 'Sign in'}
-        secondaryActionLabel={step === 'otp' ? 'Back' : undefined}
-        onSecondaryAction={step === 'otp' ? goBackToCredentials : undefined}
-        onResend={step === 'otp' ? handleResend : undefined}
-        resendCooldownSeconds={resendCooldown}
-        onSubmit={handleFormSubmit}
-      />
+      <div className="mt-6">
+        <LoginForm
+          mode={step}
+          isSubmitting={isSubmitting}
+          isResending={isResending}
+          error={error}
+          challengeMessage={challengeMessage}
+          submitLabel={step === 'otp' ? 'Verify code' : 'Sign in'}
+          secondaryActionLabel={step === 'otp' ? 'Back' : undefined}
+          onSecondaryAction={step === 'otp' ? goBackToCredentials : undefined}
+          onResend={step === 'otp' ? handleResend : undefined}
+          resendCooldownSeconds={resendCooldown}
+          onSubmit={handleFormSubmit}
+        />
+      </div>
     </div>
   );
 };

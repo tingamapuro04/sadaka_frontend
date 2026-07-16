@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Button, EmptyState, StatusBadge, useToast } from '../../../components/ui';
+import { IconFolder } from '../../../components/icons';
+import { Button, EmptyState, PageHeader, StatusBadge, useToast } from '../../../components/ui';
 import { useAuth } from '../../../hooks/useAuth';
 import { adminQueryKeys, createCategory, fetchCategories, updateCategory } from '../api';
 import type { AdminListItem } from '../types';
@@ -75,26 +76,24 @@ export const AdminCategoriesPage = () => {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Categories</h1>
-          <p className="mt-1 text-sm text-slate-600">Manage payment purposes and active states.</p>
-        </div>
-        {!isReadonly ? (
-          <Button onClick={() => setEditing(null)}>Add category</Button>
-        ) : null}
-      </div>
+    <div className="space-y-5 animate-fade-in">
+      <PageHeader
+        title="Categories"
+        description="Manage payment purposes and active states."
+        actions={
+          !isReadonly ? <Button onClick={() => setEditing(null)}>Add category</Button> : undefined
+        }
+      />
 
       {categoriesQuery.isLoading ? (
-        <p className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-600">Loading categories...</p>
+        <p className="card card-pad text-sm text-ink-muted">Loading categories...</p>
       ) : null}
       {categoriesQuery.isError ? (
-        <p className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load categories.</p>
+        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load categories.</p>
       ) : null}
       {!categoriesQuery.isLoading && !categoriesQuery.isError && categories.length === 0 ? (
         <EmptyState
-          icon="📁"
+          icon={<IconFolder className="h-6 w-6" />}
           title="No categories yet"
           description="Categories appear on your public offering page so givers can allocate amounts."
           actionLabel={isReadonly ? undefined : 'Add category'}
@@ -103,11 +102,11 @@ export const AdminCategoriesPage = () => {
       ) : null}
 
       {categories.length > 0 ? (
-      <div className="rounded border border-slate-200 bg-white shadow-sm">
+      <div className="card divide-y divide-slate-100 overflow-hidden">
         {categories.map((category) => (
-          <div key={category.id} className="flex flex-col gap-3 border-b border-slate-100 p-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+          <div key={category.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-medium text-slate-950">{category.name}</p>
+              <p className="font-medium text-ink">{category.name}</p>
               <StatusBadge label={category.is_active ? 'active' : 'closed'} />
             </div>
             {!isReadonly ? (

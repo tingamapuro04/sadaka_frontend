@@ -71,7 +71,7 @@ export const PaymentStatus = ({
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center p-6 sm:p-8 text-center bg-white rounded-3xl border border-slate-100 shadow-xl max-w-md mx-auto"
+      className="card mx-auto flex max-w-md flex-col items-center justify-center p-6 text-center shadow-card sm:p-8"
     >
       {status === 'awaiting_payment' && (
         <>

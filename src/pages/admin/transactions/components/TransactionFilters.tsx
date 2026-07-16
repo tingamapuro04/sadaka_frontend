@@ -1,3 +1,4 @@
+import { PhoneInput } from '../../../../components/shared/PhoneInput';
 import type { AdminListItem, TransactionFiltersState } from '../../types';
 
 interface TransactionFiltersProps {
@@ -43,13 +44,13 @@ export const TransactionFilters = ({
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-6">
+      <div className="card grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-6">
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Status</span>
+          <span className="mb-1 block field-label">Status</span>
           <select
             value={filters.status}
             onChange={(event) => update('status', event.target.value)}
-            className="min-h-[40px] w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="field-control"
           >
             <option value="">All</option>
             <option value="paid">Paid</option>
@@ -59,52 +60,49 @@ export const TransactionFilters = ({
           </select>
         </label>
 
-        <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Phone</span>
-          <input
-            value={filters.phone}
-            onChange={(event) => update('phone', event.target.value)}
-            placeholder="2547..."
-            className="min-h-[40px] w-full rounded-lg border border-slate-300 px-3 py-2"
-          />
-        </label>
+        <PhoneInput
+          label="Phone"
+          value={filters.phone}
+          onChange={(phone) => update('phone', phone)}
+          compact
+        />
 
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">M-PESA ref</span>
+          <span className="mb-1 block field-label">M-PESA ref</span>
           <input
             value={filters.mpesa_ref}
             onChange={(event) => update('mpesa_ref', event.target.value)}
             placeholder="ABC123"
-            className="min-h-[40px] w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="field-control"
           />
         </label>
 
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">From</span>
+          <span className="mb-1 block field-label">From</span>
           <input
             type="date"
             value={filters.from}
             onChange={(event) => update('from', event.target.value)}
-            className="min-h-[40px] w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="field-control"
           />
         </label>
 
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">To</span>
+          <span className="mb-1 block field-label">To</span>
           <input
             type="date"
             value={filters.to}
             onChange={(event) => update('to', event.target.value)}
-            className="min-h-[40px] w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="field-control"
           />
         </label>
 
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Category</span>
+          <span className="mb-1 block field-label">Category</span>
           <select
             value={filters.category_id}
             onChange={(event) => update('category_id', event.target.value)}
-            className="min-h-[40px] w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="field-control"
           >
             <option value="">All</option>
             {categories.map((category) => (
@@ -118,8 +116,8 @@ export const TransactionFilters = ({
 
       <div className="flex flex-wrap items-center gap-2">
         {typeof resultCount === 'number' ? (
-          <p className="text-sm text-slate-600">
-            <span className="font-semibold text-slate-900">{resultCount}</span> result
+          <p className="text-sm text-ink-muted">
+            <span className="font-semibold text-ink">{resultCount}</span> result
             {resultCount === 1 ? '' : 's'}
             {filters.page > 1 ? ` · page ${filters.page}` : ''}
           </p>
@@ -129,7 +127,7 @@ export const TransactionFilters = ({
             key={chip.key}
             type="button"
             onClick={() => update(chip.key, '')}
-            className="inline-flex min-h-[32px] items-center gap-1 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            className="inline-flex min-h-[32px] items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-soft hover:bg-slate-50"
           >
             {chip.label}
             <span aria-hidden className="text-slate-400">
@@ -142,7 +140,7 @@ export const TransactionFilters = ({
           <button
             type="button"
             onClick={clearAll}
-            className="text-xs font-semibold text-emerald-700 hover:underline"
+            className="text-xs font-semibold text-brand-700 hover:underline"
           >
             Clear filters
           </button>

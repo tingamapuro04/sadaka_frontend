@@ -39,11 +39,11 @@ export const AdminAuditLogsPage = () => {
     >
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Audit logs</h1>
-          <p className="mt-1 text-sm text-slate-600">Read-only activity trail with client-side action and date filters.</p>
+          <h1 className="page-title">Audit logs</h1>
+          <p className="page-subtitle">Read-only activity trail with client-side action and date filters.</p>
         </div>
 
-        <section className="grid gap-3 rounded border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2">
+        <section className="grid gap-3 card card-pad md:grid-cols-2">
           <label className="text-sm">
             <span className="mb-1 block font-medium text-slate-700">Action</span>
             <input
@@ -67,7 +67,7 @@ export const AdminAuditLogsPage = () => {
         {auditQuery.isLoading ? <div className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-600">Loading audit logs...</div> : null}
         {auditQuery.isError ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load audit logs.</div> : null}
 
-        <section className="rounded border border-slate-200 bg-white shadow-sm">
+        <section className="card">
           <div className="border-b border-slate-200 px-4 py-3">
             <h2 className="text-base font-semibold text-slate-950">Entries</h2>
           </div>

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Button, PageHeader } from '../../../components/ui';
 import { useAuth } from '../../../hooks/useAuth';
 import {
   adminQueryKeys,
@@ -58,24 +59,22 @@ export const AdminGroupsPage = () => {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Groups</h1>
-          <p className="mt-1 text-sm text-slate-600">Organize giving by congregation or ministry group.</p>
-        </div>
-        {!isReadonly ? (
-          <button type="button" onClick={() => setEditing(null)} className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
-            Add group
-          </button>
-        ) : null}
-      </div>
+    <div className="space-y-5 animate-fade-in">
+      <PageHeader
+        title="Groups"
+        description="Organize giving by congregation or ministry group."
+        actions={
+          !isReadonly ? (
+            <Button onClick={() => setEditing(null)}>Add group</Button>
+          ) : undefined
+        }
+      />
 
       {!isReadonly ? (
-        <div className="flex items-center justify-between rounded border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="card card-pad flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-medium text-slate-950">Group selector on payment page</p>
-            <p className="text-sm text-slate-500">Turn this on when contributors should choose a group.</p>
+            <p className="font-medium text-ink">Group selector on payment page</p>
+            <p className="text-sm text-ink-muted">Turn this on when contributors should choose a group.</p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
             <input
@@ -83,15 +82,15 @@ export const AdminGroupsPage = () => {
               checked={Boolean(churchQuery.data?.groups_enabled)}
               disabled={groupsEnabledMutation.isPending || churchQuery.isLoading}
               onChange={(event) => groupsEnabledMutation.mutate(event.target.checked)}
-              className="h-4 w-4"
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
             />
             Enabled
           </label>
         </div>
       ) : null}
 
-      {groupsQuery.isLoading ? <div className="rounded border bg-white p-4 text-sm text-slate-600">Loading groups...</div> : null}
-      {groupsQuery.isError ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load groups.</div> : null}
+      {groupsQuery.isLoading ? <div className="card card-pad text-sm text-ink-muted">Loading groups...</div> : null}
+      {groupsQuery.isError ? <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load groups.</div> : null}
       <GroupManager
         groups={groupsQuery.data ?? []}
         isReadonly={isReadonly}
