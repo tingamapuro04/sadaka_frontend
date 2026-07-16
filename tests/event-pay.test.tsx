@@ -147,6 +147,11 @@ describe('EventPayPage', () => {
         expect.objectContaining({
           payer_phone: '254712345678',
           amount: 500
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Idempotency-Key': expect.any(String)
+          })
         })
       );
     });

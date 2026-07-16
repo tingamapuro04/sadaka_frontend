@@ -16,12 +16,20 @@ export const usePaymentData = (username: string) => {
   });
 };
 
+function createIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `pay-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export const useSubmitPayment = (username: string) => {
   return useMutation<PaymentResponse, ApiError, PaymentSubmission>({
     mutationFn: async (submission) => {
       const response = await apiClient.post<PaymentResponse>(
         API_ENDPOINTS.payByUsername(username),
-        submission
+        submission,
+        { headers: { 'Idempotency-Key': createIdempotencyKey() } }
       );
       return response.data;
     }

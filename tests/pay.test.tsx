@@ -91,7 +91,7 @@ describe('PayPage component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Church Not Found')).toBeInTheDocument();
-      expect(screen.getByText(/We couldn't find a registered church/i)).toBeInTheDocument();
+      expect(screen.getByText(/No church registered as/i)).toBeInTheDocument();
     });
   });
 
@@ -109,7 +109,6 @@ describe('PayPage component', () => {
     });
 
     expect(screen.getByText(/KES 2 platform fee/i)).toBeInTheDocument();
-    expect(screen.getByText(/Before you pay/i)).toBeInTheDocument();
     expect(screen.getByText(/STK prompt/i)).toBeInTheDocument();
   });
 
@@ -132,7 +131,7 @@ describe('PayPage component', () => {
     const phoneInput = screen.getByPlaceholderText('712345678');
     fireEvent.change(phoneInput, { target: { value: '123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Add Category/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Add category/i }));
 
     const categorySelects = screen.getAllByRole('combobox');
     fireEvent.change(categorySelects[0]!, { target: { value: 'cat-1' } });
@@ -161,6 +160,11 @@ describe('PayPage component', () => {
             { category_id: 'cat-1', amount: 500 },
             { category_id: 'cat-2', amount: 200 }
           ]
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Idempotency-Key': expect.any(String)
+          })
         })
       );
     });

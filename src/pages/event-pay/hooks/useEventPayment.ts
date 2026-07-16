@@ -22,12 +22,20 @@ export const useEventPaymentData = (username: string, eventSlug: string) => {
   });
 };
 
+function createIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `pay-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export const useSubmitEventPayment = (username: string, eventSlug: string) => {
   return useMutation<PaymentResponse, ApiError, EventPaymentSubmission>({
     mutationFn: async (submission) => {
       const response = await apiClient.post<PaymentResponse>(
         API_ENDPOINTS.eventPay(username, eventSlug),
-        submission
+        submission,
+        { headers: { 'Idempotency-Key': createIdempotencyKey() } }
       );
       return response.data;
     }
