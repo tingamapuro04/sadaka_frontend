@@ -42,7 +42,7 @@ const paymentCreated = {
   gross_amount: 700,
   fee: 2,
   total_amount: 702,
-  status_url: '/api/pay/grace-community/transactions/tx-123',
+  status_url: '/api/v1/pay/grace-community/transactions/tx-123',
   poll_interval_seconds: 1,
   max_poll_seconds: 90
 };
@@ -153,7 +153,7 @@ describe('PayPage component', () => {
 
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/pay/grace-community',
+        '/api/v1/pay/grace-community',
         expect.objectContaining({
           payer_phone: '254712345678',
           items: [

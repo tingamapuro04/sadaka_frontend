@@ -46,7 +46,7 @@ const paymentCreated = {
   gross_amount: 500,
   fee: 2,
   total_amount: 502,
-  status_url: '/api/pay/grace-community/events/youth-camp-2026/transactions/tx-evt-1',
+  status_url: '/api/v1/pay/grace-community/events/youth-camp-2026/transactions/tx-evt-1',
   poll_interval_seconds: 1,
   max_poll_seconds: 90
 };
@@ -143,7 +143,7 @@ describe('EventPayPage', () => {
 
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/pay/grace-community/events/youth-camp-2026',
+        '/api/v1/pay/grace-community/events/youth-camp-2026',
         expect.objectContaining({
           payer_phone: '254712345678',
           amount: 500

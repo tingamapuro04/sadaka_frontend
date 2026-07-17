@@ -41,15 +41,23 @@ export const apiClient = axios.create({
   withCredentials: true
 });
 
+/** Normalize /api and /api/v1 path prefixes for client-side checks. */
+const apiPathname = (url?: string): string => {
+  if (!url) return '';
+  try {
+    return new URL(url, API_BASE_URL).pathname;
+  } catch {
+    return url;
+  }
+};
+
+const stripApiVersion = (pathname: string): string =>
+  pathname.replace(/^\/api\/v\d+/, '/api');
+
 /** Offering + event public pay endpoints — never attach church JWT. */
 const isPublicPayRequest = (url?: string): boolean => {
-  if (!url) return false;
-  try {
-    const parsed = new URL(url, API_BASE_URL);
-    return parsed.pathname.startsWith('/api/pay/');
-  } catch {
-    return /\/api\/pay\//.test(url);
-  }
+  const path = stripApiVersion(apiPathname(url));
+  return path.startsWith('/api/pay/');
 };
 
 apiClient.interceptors.request.use((config) => {
@@ -62,24 +70,17 @@ apiClient.interceptors.request.use((config) => {
 
 /** Login / OTP endpoints return 401 for bad credentials or codes — not a session expiry. */
 const isAuthChallengeRequest = (url?: string): boolean => {
-  if (!url) return false;
-  try {
-    const path = new URL(url, API_BASE_URL).pathname;
-    return (
-      path === '/api/auth/login' ||
-      path === '/api/auth/login/verify' ||
-      path === '/api/auth/otp/request' ||
-      path === '/api/auth/otp/verify' ||
-      path === '/api/churches/register' ||
-      path === '/api/churches/register/otp/request' ||
-      path === '/api/admin/withdrawals' ||
-      path === '/api/admin/withdrawals/otp/request'
-    );
-  } catch {
-    return /\/api\/(auth\/(login|login\/verify|otp\/request|otp\/verify)|churches\/register(\/otp\/request)?|admin\/withdrawals(\/otp\/request)?)$/.test(
-      url
-    );
-  }
+  const path = stripApiVersion(apiPathname(url));
+  return (
+    path === '/api/auth/login' ||
+    path === '/api/auth/login/verify' ||
+    path === '/api/auth/otp/request' ||
+    path === '/api/auth/otp/verify' ||
+    path === '/api/churches/register' ||
+    path === '/api/churches/register/otp/request' ||
+    path === '/api/admin/withdrawals' ||
+    path === '/api/admin/withdrawals/otp/request'
+  );
 };
 
 apiClient.interceptors.response.use(

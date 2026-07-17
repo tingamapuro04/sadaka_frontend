@@ -11,7 +11,6 @@ import {
   IconClipboard,
   IconFolder,
   IconHome,
-  IconKey,
   IconLock,
   IconLogout,
   IconMail,
@@ -67,8 +66,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     {
       title: 'Access',
       links: [
-        { label: 'Church Admin Login', to: '/admin/login', icon: IconLock },
-        { label: 'Sadaka Portal Login', to: '/sadaka/login', icon: IconKey }
+        { label: 'Church Admin Login', to: '/admin/login', icon: IconLock }
       ]
     },
     {

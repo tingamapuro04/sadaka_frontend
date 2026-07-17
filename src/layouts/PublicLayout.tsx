@@ -34,15 +34,9 @@ export const PublicLayout = () => {
               </Link>
               <Link
                 to="/admin/login"
-                className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 sm:px-3"
+                className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white shadow-soft hover:bg-brand-700"
               >
                 Admin
-              </Link>
-              <Link
-                to="/sadaka/login"
-                className="hidden rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white shadow-soft hover:bg-brand-700 sm:inline-flex"
-              >
-                Platform
               </Link>
             </nav>
           </div>

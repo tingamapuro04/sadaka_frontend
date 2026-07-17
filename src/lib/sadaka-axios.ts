@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api.config';
 import { API_TIMEOUT_MS } from '../config/constants';
+import { PLATFORM_LOGIN_PATH, platformLoginHref } from '../config/platform-login';
 import { normalizeApiError } from './axios';
 
 let tokenProvider: (() => string | null) | null = null;
@@ -32,7 +33,7 @@ sadakaApiClient.interceptors.request.use((config) => {
 const isSadakaAuthChallengeRequest = (url?: string): boolean => {
   if (!url) return false;
   try {
-    const path = new URL(url, API_BASE_URL).pathname;
+    const path = new URL(url, API_BASE_URL).pathname.replace(/^\/api\/v\d+/, '/api');
     return (
       path === '/api/sadaka/auth/login' ||
       path === '/api/sadaka/auth/login/verify' ||
@@ -40,7 +41,9 @@ const isSadakaAuthChallengeRequest = (url?: string): boolean => {
       path === '/api/sadaka/auth/otp/verify'
     );
   } catch {
-    return /\/api\/sadaka\/auth\/(login|login\/verify|otp\/request|otp\/verify)/.test(url);
+    return /\/api(?:\/v\d+)?\/sadaka\/auth\/(login|login\/verify|otp\/request|otp\/verify)/.test(
+      url
+    );
   }
 };
 
@@ -55,8 +58,8 @@ sadakaApiClient.interceptors.response.use(
       !isSadakaAuthChallengeRequest(requestUrl)
     ) {
       onUnauthorized?.();
-      if (typeof window !== 'undefined' && window.location.pathname !== '/sadaka/login') {
-        window.location.assign('/sadaka/login');
+      if (typeof window !== 'undefined' && window.location.pathname !== PLATFORM_LOGIN_PATH) {
+        window.location.assign(platformLoginHref());
       }
     }
     return Promise.reject(normalized);

@@ -37,7 +37,7 @@ describe('AdminChurchSettingsPage', () => {
 
   it('renders wrapped audit log responses safely', async () => {
     vi.mocked(apiClient.get).mockImplementation(async (url: string) => {
-      if (url === '/api/admin/church') {
+      if (url === '/api/v1/admin/church') {
         return {
           data: {
             church: {

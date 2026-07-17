@@ -28,13 +28,13 @@ const paymentCreated = {
   gross_amount: 100,
   fee: 2,
   total_amount: 102,
-  status_url: `/api/pay/${churchUsername}/transactions/${transactionId}`,
+  status_url: `/api/v1/pay/${churchUsername}/transactions/${transactionId}`,
   poll_interval_seconds: 1,
   max_poll_seconds: 90
 };
 
 async function mockPayPageRoutes(page: import('@playwright/test').Page) {
-  await page.route(`**/api/pay/${churchUsername}`, async (route) => {
+  await page.route(`**/api/v1/pay/${churchUsername}`, async (route) => {
     if (route.request().method() === 'GET') {
       await route.fulfill({
         status: 200,
@@ -68,7 +68,7 @@ test.describe('payment status polling', () => {
     await mockPayPageRoutes(page);
 
     let pollCount = 0;
-    await page.route(`**/api/pay/${churchUsername}/transactions/${transactionId}`, async (route) => {
+    await page.route(`**/api/v1/pay/${churchUsername}/transactions/${transactionId}`, async (route) => {
       pollCount += 1;
       const body =
         pollCount < 2
@@ -104,7 +104,7 @@ test.describe('payment status polling', () => {
   test('transitions from awaiting to failed with M-Pesa reason', async ({ page }) => {
     await mockPayPageRoutes(page);
 
-    await page.route(`**/api/pay/${churchUsername}/transactions/${transactionId}`, async (route) => {
+    await page.route(`**/api/v1/pay/${churchUsername}/transactions/${transactionId}`, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { platformLoginHref } from '../../config/platform-login';
 import { useSadakaAuth } from '../../hooks/useSadakaAuth';
 
 export const SadakaProtectedRoute = () => {
@@ -10,7 +11,7 @@ export const SadakaProtectedRoute = () => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/sadaka/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to={platformLoginHref()} replace state={{ from: location.pathname }} />;
   }
 
   return <Outlet />;

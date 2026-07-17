@@ -33,14 +33,14 @@ const paymentCreated = {
   gross_amount: 100,
   fee: 2,
   total_amount: 102,
-  status_url: `/api/pay/${churchUsername}/events/${eventSlug}/transactions/${transactionId}`,
+  status_url: `/api/v1/pay/${churchUsername}/events/${eventSlug}/transactions/${transactionId}`,
   poll_interval_seconds: 1,
   max_poll_seconds: 90
 };
 
 test.describe('event payment status polling', () => {
   test('transitions from awaiting to paid for event contributions', async ({ page }) => {
-    await page.route(`**/api/pay/${churchUsername}/events/${eventSlug}`, async (route) => {
+    await page.route(`**/api/v1/pay/${churchUsername}/events/${eventSlug}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({
           status: 200,
@@ -62,7 +62,7 @@ test.describe('event payment status polling', () => {
 
     let pollCount = 0;
     await page.route(
-      `**/api/pay/${churchUsername}/events/${eventSlug}/transactions/${transactionId}`,
+      `**/api/v1/pay/${churchUsername}/events/${eventSlug}/transactions/${transactionId}`,
       async (route) => {
         pollCount += 1;
         const body =

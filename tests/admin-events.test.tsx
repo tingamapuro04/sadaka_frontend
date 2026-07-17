@@ -124,7 +124,7 @@ describe('Admin events UI', () => {
 
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/admin/events',
+        '/api/v1/admin/events',
         expect.objectContaining({
           title: 'Easter Drive',
           slug: 'easter-drive',

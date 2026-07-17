@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { IconSearch, IconShield } from '../../components/icons';
+import { API_ENDPOINTS } from '../../config/api.config';
 import { apiClient } from '../../lib/axios';
 
 type ChurchHit = { id: string; name: string; username: string };
@@ -30,7 +31,7 @@ export const HomePage = () => {
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(async () => {
       try {
-        const res = await apiClient.get<{ churches?: ChurchHit[] }>('/api/churches', {
+        const res = await apiClient.get<{ churches?: ChurchHit[] }>(API_ENDPOINTS.publicChurches, {
           params: { q: query }
         });
         setResults(res.data.churches || []);

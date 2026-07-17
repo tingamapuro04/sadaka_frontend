@@ -3,12 +3,15 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { HomePage } from './pages/home/index.tsx';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { SadakaProtectedRoute } from './components/auth/SadakaProtectedRoute';
+import { PlatformLoginGate } from './components/auth/PlatformLoginGate';
 import { AdminLayout } from './layouts/AdminLayout';
 import { SuperAdminLayout } from './layouts/SuperAdminLayout';
 import { PublicLayout } from './layouts/PublicLayout';
 import { AuthLayout, PlatformAuthLayout } from './layouts/AuthLayout';
 import { AppShell } from './layouts/AppShell';
 import { useRouteFocus } from './hooks/useRouteFocus';
+import { PLATFORM_LOGIN_PATH } from './config/platform-login';
+import { NotFoundPage } from './pages/not-found';
 
 const pageFallback = (
   <div className="flex min-h-[40vh] items-center justify-center p-6" role="status">
@@ -160,16 +163,28 @@ export const App = () => {
             )}
           />
         </Route>
-        <Route element={<PlatformAuthLayout />}>
-          <Route
-            path="/sadaka/login"
-            element={(
-              <SuspenseRoute>
-                <SadakaLoginPage />
-              </SuspenseRoute>
-            )}
-          />
+        <Route element={<PlatformLoginGate />}>
+          <Route element={<PlatformAuthLayout />}>
+            <Route
+              path={PLATFORM_LOGIN_PATH}
+              element={(
+                <SuspenseRoute>
+                  <SadakaLoginPage />
+                </SuspenseRoute>
+              )}
+            />
+          </Route>
         </Route>
+
+        {/* Legacy public URL — no longer advertised; do not reveal platform console. */}
+        <Route
+          path="/sadaka/login"
+          element={(
+            <SuspenseRoute>
+              <NotFoundPage />
+            </SuspenseRoute>
+          )}
+        />
 
         <Route path="/login" element={<Navigate to="/admin/login" replace />} />
 
