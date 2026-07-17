@@ -112,6 +112,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             links: [
               { label: 'Dashboard', to: '/sadaka/dashboard', icon: IconChart },
               { label: 'Churches', to: '/sadaka/churches', icon: IconBuilding },
+              { label: 'Transactions', to: '/sadaka/transactions', icon: IconCard },
               { label: 'Withdrawals', to: '/sadaka/withdrawals', icon: IconWallet },
               { label: 'Logs', to: '/sadaka/audit-logs', icon: IconClipboard }
             ]

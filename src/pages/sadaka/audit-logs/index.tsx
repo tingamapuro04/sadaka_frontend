@@ -1,31 +1,36 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatDate } from '../../../utils/formatters';
 import { fetchSadakaAuditLogs, sadakaQueryKeys } from '../api';
 
 export const SadakaAuditLogsPage = () => {
   const [action, setAction] = useState('');
-  const [church, setChurch] = useState('');
-  const [date, setDate] = useState('');
+  const [churchId, setChurchId] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 25;
+
+  const params = {
+    page,
+    limit,
+    action: action.trim() || undefined,
+    church_id: churchId.trim() || undefined,
+    from: from || undefined,
+    to: to || undefined
+  };
 
   const auditQuery = useQuery({
-    queryKey: sadakaQueryKeys.auditLogs,
-    queryFn: fetchSadakaAuditLogs,
-    refetchInterval: 30_000
+    queryKey: sadakaQueryKeys.auditLogs(params),
+    queryFn: () => fetchSadakaAuditLogs(params),
+    refetchInterval: 30_000,
+    placeholderData: (prev) => prev
   });
 
-  const filteredLogs = useMemo(() => {
-    const rows = auditQuery.data ?? [];
-    return rows.filter((log) => {
-      const matchesAction = !action || log.action.toLowerCase().includes(action.toLowerCase());
-      const matchesChurch =
-        !church ||
-        log.church_name?.toLowerCase().includes(church.toLowerCase()) ||
-        log.church_id?.toLowerCase().includes(church.toLowerCase());
-      const matchesDate = !date || new Date(log.created_at).toISOString().slice(0, 10) === date;
-      return matchesAction && matchesChurch && matchesDate;
-    });
-  }, [action, auditQuery.data, church, date]);
+  const pageData = auditQuery.data;
+  const logs = pageData?.logs ?? [];
+  const total = pageData?.total ?? 0;
+  const hasNextPage = Boolean(pageData?.has_more);
 
   return (
     <div className="space-y-4">
@@ -34,30 +39,70 @@ export const SadakaAuditLogsPage = () => {
         <p className="page-subtitle">Read-only platform-wide activity trail.</p>
       </div>
 
-      <section className="grid gap-3 card card-pad md:grid-cols-3">
+      <section className="grid gap-3 card card-pad md:grid-cols-4">
         <label className="text-sm">
           <span className="mb-1 block font-medium text-slate-700">Action</span>
-          <input value={action} onChange={(event) => setAction(event.target.value)} placeholder="withdrawal_created" className="w-full rounded border border-slate-300 px-3 py-2" />
+          <input
+            value={action}
+            onChange={(event) => {
+              setAction(event.target.value);
+              setPage(1);
+            }}
+            placeholder="withdrawal.retry"
+            className="w-full rounded border border-slate-300 px-3 py-2"
+          />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Church</span>
-          <input value={church} onChange={(event) => setChurch(event.target.value)} placeholder="Grace Community" className="w-full rounded border border-slate-300 px-3 py-2" />
+          <span className="mb-1 block font-medium text-slate-700">Church ID</span>
+          <input
+            value={churchId}
+            onChange={(event) => {
+              setChurchId(event.target.value);
+              setPage(1);
+            }}
+            placeholder="uuid"
+            className="w-full rounded border border-slate-300 px-3 py-2"
+          />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Date</span>
-          <input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="w-full rounded border border-slate-300 px-3 py-2" />
+          <span className="mb-1 block font-medium text-slate-700">From</span>
+          <input
+            type="date"
+            value={from}
+            onChange={(event) => {
+              setFrom(event.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded border border-slate-300 px-3 py-2"
+          />
+        </label>
+        <label className="text-sm">
+          <span className="mb-1 block font-medium text-slate-700">To</span>
+          <input
+            type="date"
+            value={to}
+            onChange={(event) => {
+              setTo(event.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded border border-slate-300 px-3 py-2"
+          />
         </label>
       </section>
 
-      {auditQuery.isLoading ? <div className="rounded border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading audit logs...</div> : null}
-      {auditQuery.isError ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load audit logs.</div> : null}
+      {auditQuery.isLoading ? (
+        <div className="rounded border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading audit logs...</div>
+      ) : null}
+      {auditQuery.isError ? (
+        <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load audit logs.</div>
+      ) : null}
 
       <section className="card">
         <div className="divide-y divide-slate-100">
-          {!auditQuery.isLoading && filteredLogs.length === 0 ? (
+          {!auditQuery.isLoading && logs.length === 0 ? (
             <p className="p-4 text-sm text-slate-500">No audit logs match the current filters.</p>
           ) : null}
-          {filteredLogs.map((log) => (
+          {logs.map((log) => (
             <article key={log.id} className="p-4 text-sm">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -87,6 +132,31 @@ export const SadakaAuditLogsPage = () => {
             </article>
           ))}
         </div>
+        {total > 0 ? (
+          <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm text-slate-600">
+            <p>
+              Page {page} · {total} total
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded border border-slate-300 px-3 py-1.5 disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={!hasNextPage}
+                onClick={() => setPage((p) => p + 1)}
+                className="rounded border border-slate-300 px-3 py-1.5 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        ) : null}
       </section>
     </div>
   );

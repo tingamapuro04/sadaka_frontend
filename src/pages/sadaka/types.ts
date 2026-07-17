@@ -22,6 +22,63 @@ export interface SadakaDashboard {
   total_volume: number;
   total_fees: number;
   failed_withdrawals_pending_retry: number;
+  awaiting_payments?: number;
+  failed_payments_24h?: number;
+  paid_volume_7d?: number;
+  paid_volume_30d?: number;
+  top_churches?: Array<{
+    id: string;
+    name: string;
+    username: string;
+    total_volume: number;
+    available_balance: number;
+  }>;
+  failed_withdrawals?: Array<{
+    id: string;
+    church_id: string;
+    church_name: string;
+    amount: number;
+    status: string;
+  }>;
+}
+
+export interface SadakaPageMeta {
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
+}
+
+export interface SadakaChurchesPage extends SadakaPageMeta {
+  churches: SadakaChurchSummary[];
+}
+
+export interface SadakaWithdrawalsPage extends SadakaPageMeta {
+  withdrawals: SadakaWithdrawal[];
+}
+
+export interface SadakaAuditLogsPage extends SadakaPageMeta {
+  logs: SadakaAuditLog[];
+}
+
+export interface SadakaTransaction {
+  id: string;
+  church_id: string;
+  church_name: string;
+  status: 'awaiting_payment' | 'paid' | 'failed';
+  gross_amount: number;
+  fee: number;
+  total_amount: number;
+  payer_phone: string;
+  mpesa_ref: string | null;
+  source: 'offering' | 'event' | string;
+  event_id: string | null;
+  created_at: string;
+  paid_at: string | null;
+}
+
+export interface SadakaTransactionsPage extends SadakaPageMeta {
+  transactions: SadakaTransaction[];
 }
 
 export interface SadakaChurchSummary {
@@ -30,6 +87,8 @@ export interface SadakaChurchSummary {
   username: string;
   available_balance: number;
   total_volume: number;
+  suspended?: boolean;
+  suspended_at?: string | null;
 }
 
 export interface SadakaTransactionSummary {
@@ -61,6 +120,8 @@ export interface SadakaChurchDetail {
   total_fees_collected: number;
   transaction_summary?: SadakaTransactionSummary;
   withdrawal_summary?: SadakaWithdrawalSummary;
+  suspended?: boolean;
+  suspended_at?: string | null;
 }
 
 export interface SadakaWithdrawal {

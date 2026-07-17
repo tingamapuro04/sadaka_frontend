@@ -66,6 +66,13 @@ export const API_ENDPOINTS = {
   sadakaDashboard: apiPath('/sadaka/dashboard'),
   sadakaChurches: apiPath('/sadaka/churches'),
   sadakaChurch: (id: string) => apiPath(`/sadaka/churches/${encodeURIComponent(id)}`),
+  // PATCH same path with { suspended: boolean }
+  sadakaChurchTransactions: (id: string) =>
+    apiPath(`/sadaka/churches/${encodeURIComponent(id)}/transactions`),
+  sadakaChurchWithdrawals: (id: string) =>
+    apiPath(`/sadaka/churches/${encodeURIComponent(id)}/withdrawals`),
+  sadakaTransactions: apiPath('/sadaka/transactions'),
+  sadakaTransactionsExport: apiPath('/sadaka/transactions/export'),
   sadakaWithdrawals: apiPath('/sadaka/withdrawals'),
   sadakaWithdrawalRetry: (id: string) =>
     apiPath(`/sadaka/withdrawals/${encodeURIComponent(id)}/retry`),

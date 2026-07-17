@@ -2,14 +2,32 @@ import { API_ENDPOINTS } from '../../config/api.config';
 import { sadakaApiClient } from '../../lib/sadaka-axios';
 import type {
   SadakaAuditLog,
+  SadakaAuditLogsPage,
   SadakaChurchDetail,
   SadakaChurchSummary,
+  SadakaChurchesPage,
   SadakaDashboard,
   SadakaLoginChallengeResponse,
   SadakaLoginVerifyResponse,
   SadakaLoginResponse,
-  SadakaWithdrawal
+  SadakaTransaction,
+  SadakaTransactionsPage,
+  SadakaWithdrawal,
+  SadakaWithdrawalsPage
 } from './types';
+
+export type ListParams = Record<string, string | number | undefined | null>;
+
+const toQuery = (params?: ListParams): string => {
+  if (!params) return '';
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    search.set(key, String(value));
+  });
+  const qs = search.toString();
+  return qs ? `?${qs}` : '';
+};
 
 const toNumber = (value: unknown): number => {
   const parsed = typeof value === 'number' ? value : Number(value ?? 0);
@@ -41,7 +59,9 @@ const normalizeChurch = (church: SadakaChurchSummary | Record<string, unknown>):
     name: toString(record.name),
     username: toString(record.username),
     available_balance: toNumber(record.available_balance),
-    total_volume: toNumber(record.total_volume ?? record.total_paid ?? record.total_amount)
+    total_volume: toNumber(record.total_volume ?? record.total_paid ?? record.total_amount),
+    suspended: Boolean(record.suspended ?? record.suspended_at),
+    suspended_at: (record.suspended_at as string | null | undefined) ?? null
   };
 };
 
@@ -75,7 +95,9 @@ const normalizeChurchDetail = (church: SadakaChurchDetail | Record<string, unkno
           failed_withdrawals: toNumber((record.withdrawal_summary as Record<string, unknown>).failed_withdrawals),
           pending_withdrawals: toNumber((record.withdrawal_summary as Record<string, unknown>).pending_withdrawals)
         }
-      : undefined
+      : undefined,
+    suspended: Boolean(record.suspended ?? record.suspended_at),
+    suspended_at: (record.suspended_at as string | null | undefined) ?? null
   };
 };
 
@@ -101,10 +123,11 @@ const normalizeAuditLog = (log: SadakaAuditLog | Record<string, unknown>): Sadak
 
 export const sadakaQueryKeys = {
   dashboard: ['sadaka', 'dashboard'] as const,
-  churches: ['sadaka', 'churches'] as const,
+  churches: (params?: ListParams) => ['sadaka', 'churches', params ?? {}] as const,
   church: (id: string) => ['sadaka', 'church', id] as const,
-  withdrawals: ['sadaka', 'withdrawals'] as const,
-  auditLogs: ['sadaka', 'audit-logs'] as const
+  withdrawals: (params?: ListParams) => ['sadaka', 'withdrawals', params ?? {}] as const,
+  auditLogs: (params?: ListParams) => ['sadaka', 'audit-logs', params ?? {}] as const,
+  transactions: (params?: ListParams) => ['sadaka', 'transactions', params ?? {}] as const
 };
 
 export const startSadakaLogin = async (
@@ -143,11 +166,20 @@ export const fetchSadakaDashboard = async (): Promise<SadakaDashboard> => {
   return data;
 };
 
-export const fetchSadakaChurches = async (): Promise<SadakaChurchSummary[]> => {
-  const { data } = await sadakaApiClient.get<SadakaChurchSummary[] | { churches: SadakaChurchSummary[] }>(
-    API_ENDPOINTS.sadakaChurches
-  );
-  return unwrapList<SadakaChurchSummary>(data, 'churches').map(normalizeChurch);
+export const fetchSadakaChurches = async (params?: ListParams): Promise<SadakaChurchesPage> => {
+  const { data } = await sadakaApiClient.get<
+    SadakaChurchSummary[] | { churches: SadakaChurchSummary[]; total?: number; page?: number; page_size?: number; has_more?: boolean }
+  >(`${API_ENDPOINTS.sadakaChurches}${toQuery(params)}`);
+
+  const churches = unwrapList<SadakaChurchSummary>(data, 'churches').map(normalizeChurch);
+  const record = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+  return {
+    churches,
+    total: toNumber(record.total ?? churches.length),
+    page: toNumber(record.page ?? 1),
+    page_size: toNumber(record.page_size ?? (churches.length || 20)),
+    has_more: Boolean(record.has_more)
+  };
 };
 
 export const fetchSadakaChurch = async (id: string): Promise<SadakaChurchDetail> => {
@@ -160,11 +192,20 @@ export const fetchSadakaChurch = async (id: string): Promise<SadakaChurchDetail>
   return normalizeChurchDetail(data as SadakaChurchDetail);
 };
 
-export const fetchSadakaWithdrawals = async (): Promise<SadakaWithdrawal[]> => {
-  const { data } = await sadakaApiClient.get<SadakaWithdrawal[] | { withdrawals: SadakaWithdrawal[] }>(
-    API_ENDPOINTS.sadakaWithdrawals
-  );
-  return unwrapList<SadakaWithdrawal>(data, 'withdrawals').map(normalizeWithdrawal);
+export const fetchSadakaWithdrawals = async (params?: ListParams): Promise<SadakaWithdrawalsPage> => {
+  const { data } = await sadakaApiClient.get<
+    SadakaWithdrawal[] | { withdrawals: SadakaWithdrawal[]; total?: number; page?: number; page_size?: number; has_more?: boolean }
+  >(`${API_ENDPOINTS.sadakaWithdrawals}${toQuery(params)}`);
+
+  const withdrawals = unwrapList<SadakaWithdrawal>(data, 'withdrawals').map(normalizeWithdrawal);
+  const record = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+  return {
+    withdrawals,
+    total: toNumber(record.total ?? withdrawals.length),
+    page: toNumber(record.page ?? 1),
+    page_size: toNumber(record.page_size ?? (withdrawals.length || 20)),
+    has_more: Boolean(record.has_more)
+  };
 };
 
 export const retrySadakaWithdrawal = async (id: string): Promise<{ id: string; status: string }> => {
@@ -177,7 +218,119 @@ export const cancelSadakaWithdrawal = async (id: string): Promise<{ id: string; 
   return data;
 };
 
-export const fetchSadakaAuditLogs = async (): Promise<SadakaAuditLog[]> => {
-  const { data } = await sadakaApiClient.get<SadakaAuditLog[] | { logs: SadakaAuditLog[] }>(API_ENDPOINTS.sadakaAuditLogs);
-  return unwrapList<SadakaAuditLog>(data, 'logs', 'audit_logs').map(normalizeAuditLog);
+export const fetchSadakaAuditLogs = async (params?: ListParams): Promise<SadakaAuditLogsPage> => {
+  const { data } = await sadakaApiClient.get<
+    SadakaAuditLog[] | { logs: SadakaAuditLog[]; total?: number; page?: number; page_size?: number; has_more?: boolean }
+  >(`${API_ENDPOINTS.sadakaAuditLogs}${toQuery(params)}`);
+
+  const logs = unwrapList<SadakaAuditLog>(data, 'logs', 'audit_logs').map(normalizeAuditLog);
+  const record = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+  return {
+    logs,
+    total: toNumber(record.total ?? logs.length),
+    page: toNumber(record.page ?? 1),
+    page_size: toNumber(record.page_size ?? (logs.length || 50)),
+    has_more: Boolean(record.has_more)
+  };
+};
+
+const normalizeTransaction = (tx: SadakaTransaction | Record<string, unknown>): SadakaTransaction => {
+  const record = tx as Record<string, unknown>;
+  return {
+    id: toString(record.id),
+    church_id: toString(record.church_id),
+    church_name: toString(record.church_name),
+    status: record.status as SadakaTransaction['status'],
+    gross_amount: toNumber(record.gross_amount),
+    fee: toNumber(record.fee),
+    total_amount: toNumber(record.total_amount),
+    payer_phone: toString(record.payer_phone),
+    mpesa_ref: (record.mpesa_ref as string | null | undefined) ?? null,
+    source: toString(record.source, 'offering'),
+    event_id: (record.event_id as string | null | undefined) ?? null,
+    created_at: toString(record.created_at),
+    paid_at: (record.paid_at as string | null | undefined) ?? null
+  };
+};
+
+export const fetchSadakaTransactions = async (params?: ListParams): Promise<SadakaTransactionsPage> => {
+  const { data } = await sadakaApiClient.get<{
+    transactions?: SadakaTransaction[];
+    total?: number;
+    page?: number;
+    page_size?: number;
+    has_more?: boolean;
+  }>(`${API_ENDPOINTS.sadakaTransactions}${toQuery(params)}`);
+
+  const transactions = unwrapList<SadakaTransaction>(data, 'transactions').map(normalizeTransaction);
+  const record = data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
+  return {
+    transactions,
+    total: toNumber(record.total ?? transactions.length),
+    page: toNumber(record.page ?? 1),
+    page_size: toNumber(record.page_size ?? (transactions.length || 50)),
+    has_more: Boolean(record.has_more)
+  };
+};
+
+export const fetchSadakaChurchTransactions = async (
+  churchId: string,
+  params?: ListParams
+): Promise<SadakaTransactionsPage> => {
+  const { data } = await sadakaApiClient.get<{
+    transactions?: SadakaTransaction[];
+    total?: number;
+    page?: number;
+    page_size?: number;
+    has_more?: boolean;
+  }>(`${API_ENDPOINTS.sadakaChurchTransactions(churchId)}${toQuery(params)}`);
+
+  const transactions = unwrapList<SadakaTransaction>(data, 'transactions').map(normalizeTransaction);
+  const record = data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
+  return {
+    transactions,
+    total: toNumber(record.total ?? transactions.length),
+    page: toNumber(record.page ?? 1),
+    page_size: toNumber(record.page_size ?? (transactions.length || 50)),
+    has_more: Boolean(record.has_more)
+  };
+};
+
+export const fetchSadakaChurchWithdrawals = async (
+  churchId: string,
+  params?: ListParams
+): Promise<SadakaWithdrawalsPage> => {
+  const { data } = await sadakaApiClient.get(
+    `${API_ENDPOINTS.sadakaChurchWithdrawals(churchId)}${toQuery(params)}`
+  );
+  const withdrawals = unwrapList<SadakaWithdrawal>(data, 'withdrawals').map(normalizeWithdrawal);
+  const record = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+  return {
+    withdrawals,
+    total: toNumber(record.total ?? withdrawals.length),
+    page: toNumber(record.page ?? 1),
+    page_size: toNumber(record.page_size ?? (withdrawals.length || 20)),
+    has_more: Boolean(record.has_more)
+  };
+};
+
+export const downloadSadakaTransactionsCsv = async (params?: ListParams): Promise<Blob> => {
+  const { data } = await sadakaApiClient.get(`${API_ENDPOINTS.sadakaTransactionsExport}${toQuery(params)}`, {
+    responseType: 'blob'
+  });
+  return data as Blob;
+};
+
+export const setSadakaChurchSuspended = async (
+  id: string,
+  suspended: boolean
+): Promise<{ id: string; suspended: boolean }> => {
+  const { data } = await sadakaApiClient.patch<{ church: { id: string; suspended: boolean } }>(
+    API_ENDPOINTS.sadakaChurch(id),
+    { suspended }
+  );
+  return {
+    id: data.church?.id ?? id,
+    suspended: Boolean(data.church?.suspended)
+  };
 };

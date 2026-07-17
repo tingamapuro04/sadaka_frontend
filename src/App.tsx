@@ -105,6 +105,10 @@ const SadakaAuditLogsPage = lazyPage(async () => {
   const module = await import('./pages/sadaka/audit-logs');
   return { default: module.SadakaAuditLogsPage };
 });
+const SadakaTransactionsPage = lazyPage(async () => {
+  const module = await import('./pages/sadaka/transactions');
+  return { default: module.SadakaTransactionsPage };
+});
 
 const SuspenseRoute = ({ children }: { children: ReactNode }) => (
   <Suspense fallback={pageFallback}>{children}</Suspense>
@@ -214,6 +218,7 @@ export const App = () => {
               <Route path="dashboard" element={<SuspenseRoute><SadakaDashboardPage /></SuspenseRoute>} />
               <Route path="churches" element={<SuspenseRoute><SadakaChurchesPage /></SuspenseRoute>} />
               <Route path="churches/:id" element={<SuspenseRoute><SadakaChurchDetailPage /></SuspenseRoute>} />
+              <Route path="transactions" element={<SuspenseRoute><SadakaTransactionsPage /></SuspenseRoute>} />
               <Route path="withdrawals" element={<SuspenseRoute><SadakaWithdrawalsPage /></SuspenseRoute>} />
               <Route path="audit-logs" element={<SuspenseRoute><SadakaAuditLogsPage /></SuspenseRoute>} />
             </Route>

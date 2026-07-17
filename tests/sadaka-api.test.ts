@@ -20,6 +20,10 @@ describe('Sadaka API normalization', () => {
   it('unwraps audit logs from the backend audit_logs envelope', async () => {
     mockApiClient.get.mockResolvedValueOnce({
       data: {
+        total: 1,
+        page: 1,
+        page_size: 50,
+        has_more: false,
         audit_logs: [
           {
             id: 'log-1',
@@ -31,10 +35,11 @@ describe('Sadaka API normalization', () => {
       }
     });
 
-    const logs = await fetchSadakaAuditLogs();
+    const page = await fetchSadakaAuditLogs();
 
-    expect(logs).toHaveLength(1);
-    expect(logs[0]).toMatchObject({
+    expect(page.logs).toHaveLength(1);
+    expect(page.total).toBe(1);
+    expect(page.logs[0]).toMatchObject({
       id: 'log-1',
       action: 'withdrawal.retry',
       actor: 'super-admin'
@@ -44,6 +49,10 @@ describe('Sadaka API normalization', () => {
   it('maps church summaries from the backend financial fields', async () => {
     mockApiClient.get.mockResolvedValueOnce({
       data: {
+        total: 1,
+        page: 1,
+        page_size: 20,
+        has_more: false,
         churches: [
           {
             id: 'church-1',
@@ -57,10 +66,11 @@ describe('Sadaka API normalization', () => {
       }
     });
 
-    const churches = await fetchSadakaChurches();
+    const page = await fetchSadakaChurches();
 
-    expect(churches).toHaveLength(1);
-    expect(churches[0]).toMatchObject({
+    expect(page.churches).toHaveLength(1);
+    expect(page.total).toBe(1);
+    expect(page.churches[0]).toMatchObject({
       id: 'church-1',
       name: 'Grace Community',
       username: 'grace',
