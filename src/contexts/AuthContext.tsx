@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -14,6 +15,16 @@ import type { UserRole } from '../types/common.types';
 
 const INACTIVITY_MS = 15 * 60_000;
 const WARNING_MS = 60_000;
+
+/** First-party session fallback when the httpOnly cookie is not sent (cross-site). */
+const STORAGE_KEY = 'sadaka_church_auth_v1';
+
+type ChurchRole = Exclude<UserRole, null | 'sadaka_admin' | 'sadaka_super_admin'>;
+
+type StoredChurchAuth = {
+  token: string;
+  role: ChurchRole;
+};
 
 type AuthContextValue = {
   token: string | null;
@@ -28,11 +39,48 @@ type AuthContextValue = {
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const isChurchRole = (role: unknown): role is ChurchRole =>
+  role === 'church_super_admin' || role === 'readonly';
+
+const readStoredAuth = (): StoredChurchAuth | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredChurchAuth>;
+    if (typeof parsed.token === 'string' && isChurchRole(parsed.role)) {
+      return { token: parsed.token, role: parsed.role };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+const writeStoredAuth = (token: string | null, role: ChurchRole | null): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (token && role) {
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ token, role }));
+      return;
+    }
+    window.sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Ignore quota / private-mode failures; cookie path may still work.
+  }
+};
+
 export const AuthProvider = ({ children }: PropsWithChildren) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [role, setRole] = useState<UserRole>(null);
+  const stored = readStoredAuth();
+  const [token, setToken] = useState<string | null>(stored?.token ?? null);
+  const [role, setRole] = useState<UserRole>(stored?.role ?? null);
   const [showSessionWarning, setShowSessionWarning] = useState(false);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  // Ready immediately when we already restored from sessionStorage; still revalidate via cookie.
+  const [isAuthReady, setIsAuthReady] = useState(Boolean(stored?.token));
 
   const warningTimer = useRef<number | null>(null);
   const logoutTimer = useRef<number | null>(null);
@@ -53,6 +101,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setShowSessionWarning(false);
     setToken(null);
     setRole(null);
+    writeStoredAuth(null, null);
     setIsAuthReady(true);
 
     // Clear the httpOnly session cookie so refresh does not rehydrate via /api/auth/me.
@@ -89,71 +138,95 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const login = useCallback(
     (nextToken: string, nextRole: Exclude<UserRole, null>) => {
+      // Church AuthContext only accepts church roles; ignore platform tokens.
+      if (!isChurchRole(nextRole)) {
+        setToken(null);
+        setRole(null);
+        writeStoredAuth(null, null);
+        setIsAuthReady(true);
+        return;
+      }
+
       setToken(nextToken);
       setRole(nextRole);
+      writeStoredAuth(nextToken, nextRole);
       setShowSessionWarning(false);
       setIsAuthReady(true);
     },
     []
   );
 
+  // Register axios handlers before child effects so a refresh does not race a dashboard
+  // fetch (which would 401 and clear the restored session).
+  useLayoutEffect(() => {
+    registerAuthHandlers({
+      getToken: () => token,
+      handleUnauthorized: logout
+    });
+  }, [logout, token]);
+
   useEffect(() => {
     let cancelled = false;
 
     const bootstrapAuth = async () => {
+      // Prefer httpOnly cookie rehydration (validates session server-side).
       try {
         const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.authMe}`, {
           method: 'GET',
           credentials: 'include'
         });
 
-        if (!response.ok) {
-          if (!cancelled) {
-            setToken(null);
-            setRole(null);
+        if (response.ok) {
+          const data = (await response.json()) as AuthMeResponse;
+          if (cancelled) {
+            return;
           }
-          return;
-        }
 
-        const data = (await response.json()) as AuthMeResponse;
-        if (cancelled) {
-          return;
-        }
+          // Only restore church-admin sessions here. Platform (Sadaka) tokens share
+          // the same cookie name but must not mark the church AuthContext as logged in.
+          if (isChurchRole(data.role)) {
+            setToken(data.token);
+            setRole(data.role);
+            writeStoredAuth(data.token, data.role);
+            return;
+          }
 
-        // Only restore church-admin sessions here. Platform (Sadaka) tokens share
-        // the same cookie name but must not mark the church AuthContext as logged in.
-        if (data.role === 'church_super_admin' || data.role === 'readonly') {
-          setToken(data.token);
-          setRole(data.role);
-        } else {
+          // Cookie is a platform session — do not keep a stale church sessionStorage entry.
           setToken(null);
           setRole(null);
+          writeStoredAuth(null, null);
+          return;
         }
       } catch {
-        if (!cancelled) {
-          setToken(null);
-          setRole(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsAuthReady(true);
-        }
+        // Network errors fall through to sessionStorage fallback below.
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      // Cookie missing / blocked (cross-site without SameSite=None) or offline:
+      // keep the first-party sessionStorage restore if we already have one.
+      const fallback = readStoredAuth();
+      if (fallback) {
+        setToken(fallback.token);
+        setRole(fallback.role);
+      } else {
+        setToken(null);
+        setRole(null);
       }
     };
 
-    void bootstrapAuth();
+    void bootstrapAuth().finally(() => {
+      if (!cancelled) {
+        setIsAuthReady(true);
+      }
+    });
 
     return () => {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    registerAuthHandlers({
-      getToken: () => token,
-      handleUnauthorized: logout
-    });
-  }, [logout, token]);
 
   useEffect(() => {
     if (!token) {

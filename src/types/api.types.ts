@@ -56,8 +56,9 @@ export interface LoginVerifyResponse {
 
 export interface AuthMeResponse {
   token: string;
-  role: 'church_super_admin' | 'readonly';
-  church_id: string;
+  /** JWT role from cookie/bearer — church admin, readonly, or platform super admin. */
+  role: 'church_super_admin' | 'readonly' | 'sadaka_super_admin';
+  church_id?: string | null;
   actor_id: string;
   church?: Church;
   account?: {

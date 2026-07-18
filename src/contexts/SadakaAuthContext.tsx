@@ -1,6 +1,15 @@
-import { createContext, useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  type PropsWithChildren
+} from 'react';
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
 import { registerSadakaAuthHandlers } from '../lib/sadaka-axios';
+import type { AuthMeResponse } from '../types/api.types';
 import type { UserRole } from '../types/common.types';
 
 const STORAGE_KEY = 'sadaka_auth_v1';
@@ -43,22 +52,30 @@ const readStoredAuth = (): StoredSadakaAuth | null => {
 export const SadakaAuthProvider = ({ children }: PropsWithChildren) => {
   const stored = readStoredAuth();
   const [token, setToken] = useState<string | null>(stored?.token ?? null);
-  const [role, setRole] = useState<Extract<UserRole, 'sadaka_super_admin'> | null>(stored?.role ?? null);
-  const isAuthReady = true;
+  const [role, setRole] = useState<Extract<UserRole, 'sadaka_super_admin'> | null>(
+    stored?.role ?? null
+  );
+  // Ready immediately when sessionStorage restored; still revalidate via cookie when possible.
+  const [isAuthReady, setIsAuthReady] = useState(Boolean(stored?.token));
 
   const persist = useCallback((nextToken: string | null, nextRole: StoredSadakaAuth['role'] | null) => {
     if (typeof window === 'undefined') return;
-    if (nextToken && nextRole) {
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ token: nextToken, role: nextRole }));
-      return;
+    try {
+      if (nextToken && nextRole) {
+        window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ token: nextToken, role: nextRole }));
+        return;
+      }
+      window.sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Ignore storage failures
     }
-    window.sessionStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const logout = useCallback(() => {
     setToken(null);
     setRole(null);
     persist(null, null);
+    setIsAuthReady(true);
 
     // Clear the shared httpOnly session cookie (login also sets sadaka_auth_token).
     void fetch(`${API_BASE_URL}${API_ENDPOINTS.sadakaLogout}`, {
@@ -74,16 +91,76 @@ export const SadakaAuthProvider = ({ children }: PropsWithChildren) => {
       setToken(nextToken);
       setRole(nextRole);
       persist(nextToken, nextRole);
+      setIsAuthReady(true);
     },
     [persist]
   );
 
-  useEffect(() => {
+  // Before child effects: avoid a post-refresh dashboard fetch racing without a token.
+  useLayoutEffect(() => {
     registerSadakaAuthHandlers({
       getToken: () => token,
       handleUnauthorized: logout
     });
   }, [logout, token]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const bootstrapAuth = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.authMe}`, {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = (await response.json()) as AuthMeResponse;
+          if (cancelled) {
+            return;
+          }
+
+          if (data.role === 'sadaka_super_admin') {
+            setToken(data.token);
+            setRole('sadaka_super_admin');
+            persist(data.token, 'sadaka_super_admin');
+            return;
+          }
+
+          // Cookie is a church session — do not treat as platform login.
+          // Keep existing sessionStorage platform token if present (separate sessions).
+          const fallback = readStoredAuth();
+          if (fallback) {
+            setToken(fallback.token);
+            setRole(fallback.role);
+          }
+          return;
+        }
+      } catch {
+        // Fall through to sessionStorage
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      const fallback = readStoredAuth();
+      if (fallback) {
+        setToken(fallback.token);
+        setRole(fallback.role);
+      }
+    };
+
+    void bootstrapAuth().finally(() => {
+      if (!cancelled) {
+        setIsAuthReady(true);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [persist]);
 
   const value = useMemo(
     () => ({
