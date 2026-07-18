@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ToastProvider } from '../src/components/ui';
 import { AdminChurchSettingsPage } from '../src/pages/admin/church/settings';
 import { apiClient } from '../src/lib/axios';
 
@@ -77,7 +78,9 @@ describe('AdminChurchSettingsPage', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <AdminChurchSettingsPage />
+        <ToastProvider>
+          <AdminChurchSettingsPage />
+        </ToastProvider>
       </QueryClientProvider>
     );
 
