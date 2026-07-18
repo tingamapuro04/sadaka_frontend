@@ -66,13 +66,27 @@ export const AdminTransactionsPage = () => {
     }));
   };
 
+  const page = transactionsQuery.data?.page ?? filters.page;
+  const total = transactionsQuery.data?.total ?? 0;
+  const canGoNext = sortedTransactions.length > 0 && !transactionsQuery.isFetching;
+  const canGoPrev = filters.page > 1 && !transactionsQuery.isFetching;
+
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-4 animate-fade-in sm:space-y-5">
       <PageHeader
         title="Transactions"
-        description="Filter, inspect, sort, and export church payments."
-        actions={<ExportButton filters={debouncedFilters} />}
+        description="Filter, inspect, and export church payments."
+        actions={
+          <div className="hidden sm:block">
+            <ExportButton filters={debouncedFilters} />
+          </div>
+        }
       />
+
+      {/* Mobile export — full-width, under title strip */}
+      <div className="sm:hidden">
+        <ExportButton filters={debouncedFilters} fullWidth />
+      </div>
 
       <TransactionFilters
         categories={categories}
@@ -82,7 +96,7 @@ export const AdminTransactionsPage = () => {
       />
 
       {transactionsQuery.isError ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700 sm:p-4" role="alert">
           Unable to load transactions. Check your filters and try again.
         </div>
       ) : null}
@@ -94,24 +108,27 @@ export const AdminTransactionsPage = () => {
       ) : (
         <>
           <TransactionTable transactions={sortedTransactions} filters={filters} onSort={sortBy} />
-          <div className="card flex items-center justify-between px-4 py-3 text-sm">
+
+          <div className="card flex items-center gap-2 px-3 py-2.5 sm:justify-between sm:px-4 sm:py-3">
             <Button
               variant="secondary"
               size="sm"
-              disabled={filters.page <= 1 || transactionsQuery.isFetching}
+              className="min-w-[5.5rem]"
+              disabled={!canGoPrev}
               onClick={() => setFilters((current) => ({ ...current, page: Math.max(current.page - 1, 1) }))}
             >
               Previous
             </Button>
-            <span className="text-ink-muted">
-              Page {transactionsQuery.data?.page ?? filters.page}
-              <span className="mx-1.5 text-slate-300">·</span>
-              {transactionsQuery.data?.total ?? 0} records
-            </span>
+            <div className="min-w-0 flex-1 text-center text-xs text-ink-muted sm:text-sm">
+              <span className="font-medium text-ink">Page {page}</span>
+              <span className="mx-1 text-slate-300">·</span>
+              <span className="tabular-nums">{total.toLocaleString('en-KE')} total</span>
+            </div>
             <Button
               variant="secondary"
               size="sm"
-              disabled={sortedTransactions.length === 0 || transactionsQuery.isFetching}
+              className="min-w-[5.5rem]"
+              disabled={!canGoNext}
               onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}
             >
               Next
