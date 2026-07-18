@@ -42,9 +42,12 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
 
   const isAuthenticated = isChurchAuthenticated || isSadakaAuthenticated;
+  const isChurchAdmin = role === 'church_super_admin' || role === 'readonly';
   const isSadakaRole = (currentRole: string | null) =>
     currentRole === 'sadaka_admin' || currentRole === 'sadaka_super_admin';
   const isSadakaPortalUser = isSadakaRole(role) || isSadakaRole(sadakaRole);
+  // Church console should stay in-product; public discovery links are for guests only.
+  const showPublicDiscoveryLinks = !isChurchAdmin;
 
   const isActivePath = (to: string) => {
     if (to === '/') return location.pathname === '/';
@@ -76,14 +79,18 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   ];
 
   const authenticatedSections: NavSection[] = [
-    {
-      title: 'Main',
-      links: [
-        { label: 'Home', to: '/', icon: IconHome },
-        { label: 'Find a Church', to: '/', icon: IconSearch }
-      ]
-    },
-    ...(role === 'church_super_admin' || role === 'readonly'
+    ...(showPublicDiscoveryLinks
+      ? [
+          {
+            title: 'Main',
+            links: [
+              { label: 'Home', to: '/', icon: IconHome },
+              { label: 'Find a Church', to: '/', icon: IconSearch }
+            ]
+          } satisfies NavSection
+        ]
+      : []),
+    ...(isChurchAdmin
       ? [
           {
             title: 'Church admin',
@@ -140,6 +147,11 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   ];
 
   const sections = isAuthenticated ? authenticatedSections : publicSections;
+  const brandHomeTo = isChurchAdmin
+    ? '/admin/dashboard'
+    : isSadakaPortalUser
+      ? '/sadaka/dashboard'
+      : '/';
 
   const linkClass = (active: boolean) =>
     `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -167,7 +179,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       >
         <div className="border-b border-slate-800/80 p-4">
           <Link
-            to="/"
+            to={brandHomeTo}
             onClick={onClose}
             className="inline-flex items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
           >
