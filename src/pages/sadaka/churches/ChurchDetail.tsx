@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
+import { Button, Card, StatusBadge, useToast } from '../../../components/ui';
 import { formatDate, formatKesCurrency } from '../../../utils/formatters';
 import {
   fetchSadakaChurch,
@@ -12,9 +13,16 @@ import {
 
 type Tab = 'overview' | 'transactions' | 'withdrawals';
 
+const TABS: Array<{ key: Tab; label: string }> = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'transactions', label: 'Transactions' },
+  { key: 'withdrawals', label: 'Withdrawals' }
+];
+
 export const SadakaChurchDetailPage = () => {
   const { id = '' } = useParams();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [tab, setTab] = useState<Tab>('overview');
   const [txPage, setTxPage] = useState(1);
   const [wdPage, setWdPage] = useState(1);
@@ -28,10 +36,11 @@ export const SadakaChurchDetailPage = () => {
 
   const suspendMutation = useMutation({
     mutationFn: (suspended: boolean) => setSadakaChurchSuspended(id, suspended),
-    onSuccess: () => {
+    onSuccess: (_data, suspended) => {
       setActionError(null);
       void queryClient.invalidateQueries({ queryKey: sadakaQueryKeys.church(id) });
       void queryClient.invalidateQueries({ queryKey: ['sadaka', 'churches'] });
+      toast.success(suspended ? 'Church suspended' : 'Church unsuspended');
     },
     onError: (error: unknown) => {
       const message =
@@ -39,6 +48,7 @@ export const SadakaChurchDetailPage = () => {
           ? (error as { message: string }).message
           : 'Unable to update church status.';
       setActionError(message);
+      toast.error(message);
     }
   });
 
@@ -59,96 +69,117 @@ export const SadakaChurchDetailPage = () => {
   const church = churchQuery.data;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <Link to="/sadaka/churches" className="text-sm text-slate-600 hover:underline">
-            Back to churches
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+    <div className="space-y-4 animate-fade-in sm:space-y-5">
+      <div>
+        <Link to="/sadaka/churches" className="inline-flex text-sm font-semibold text-brand-700 hover:underline">
+          ← Back to churches
+        </Link>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">
             {church?.name ?? 'Church detail'}
           </h1>
-          <p className="mt-1 text-sm text-slate-600">Profile, money flow, and withdrawals.</p>
+          {church?.suspended ? <StatusBadge label="suspended" /> : null}
         </div>
+        {church?.username ? (
+          <p className="mt-0.5 text-sm text-ink-muted">@{church.username}</p>
+        ) : (
+          <p className="mt-0.5 text-sm text-ink-muted">Profile, money flow, and withdrawals.</p>
+        )}
       </div>
 
       {churchQuery.isLoading ? (
-        <div className="rounded border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading church detail...</div>
+        <div className="card card-pad text-sm text-ink-muted" role="status">
+          Loading church detail…
+        </div>
       ) : null}
       {churchQuery.isError ? (
-        <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load church detail.</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700 sm:p-4" role="alert">
+          Unable to load church detail.
+        </div>
       ) : null}
 
       {church ? (
         <div className="space-y-4">
           {church.suspended ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-800 sm:px-4">
               This church is <strong>suspended</strong>. Public pay and church admin login are blocked.
             </div>
           ) : null}
           {actionError ? (
-            <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{actionError}</div>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+              {actionError}
+            </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={suspendMutation.isPending}
-              onClick={() => {
-                const next = !church.suspended;
-                if (
-                  next &&
-                  !window.confirm(
-                    `Suspend ${church.name}? Public payments and church admin login will be blocked.`
-                  )
-                ) {
-                  return;
-                }
-                suspendMutation.mutate(next);
-              }}
-              className={`rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50 ${
-                church.suspended
-                  ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                  : 'bg-red-600 text-white hover:bg-red-700'
-              }`}
-            >
-              {suspendMutation.isPending
-                ? 'Updating…'
-                : church.suspended
-                  ? 'Unsuspend church'
-                  : 'Suspend church'}
-            </button>
-          </div>
+          <Button
+            fullWidth
+            className="sm:!w-auto"
+            variant={church.suspended ? 'primary' : 'danger'}
+            disabled={suspendMutation.isPending}
+            loading={suspendMutation.isPending}
+            onClick={() => {
+              const next = !church.suspended;
+              if (
+                next &&
+                !window.confirm(
+                  `Suspend ${church.name}? Public payments and church admin login will be blocked.`
+                )
+              ) {
+                return;
+              }
+              suspendMutation.mutate(next);
+            }}
+          >
+            {suspendMutation.isPending
+              ? 'Updating…'
+              : church.suspended
+                ? 'Unsuspend church'
+                : 'Suspend church'}
+          </Button>
 
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <div className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Available balance</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">{formatKesCurrency(church.available_balance)}</p>
+          <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3" aria-label="Money metrics">
+            <div className="stat-card border-brand-100 bg-gradient-to-br from-white to-brand-50/40">
+              <p className="text-[0.65rem] font-medium uppercase tracking-wide text-ink-muted sm:text-xs">
+                Available balance
+              </p>
+              <p className="stat-card-value text-[1.125rem] sm:text-xl">
+                {formatKesCurrency(church.available_balance)}
+              </p>
             </div>
-            <div className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Total volume</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">{formatKesCurrency(church.total_volume)}</p>
+            <div className="stat-card border-slate-200/80 bg-white">
+              <p className="text-[0.65rem] font-medium uppercase tracking-wide text-ink-muted sm:text-xs">
+                Total volume
+              </p>
+              <p className="stat-card-value text-[1.125rem] sm:text-xl">
+                {formatKesCurrency(church.total_volume)}
+              </p>
             </div>
-            <div className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Fees collected</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">{formatKesCurrency(church.total_fees_collected)}</p>
+            <div className="stat-card col-span-2 border-slate-200/80 bg-white sm:col-span-1">
+              <p className="text-[0.65rem] font-medium uppercase tracking-wide text-ink-muted sm:text-xs">
+                Fees collected
+              </p>
+              <p className="stat-card-value text-[1.125rem] sm:text-xl">
+                {formatKesCurrency(church.total_fees_collected)}
+              </p>
             </div>
           </section>
 
-          <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
-            {(
-              [
-                ['overview', 'Overview'],
-                ['transactions', 'Transactions'],
-                ['withdrawals', 'Withdrawals']
-              ] as const
-            ).map(([key, label]) => (
+          <div
+            className="mobile-chip-row border-b border-slate-100 pb-2"
+            role="tablist"
+            aria-label="Church sections"
+          >
+            {TABS.map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
+                role="tab"
+                aria-selected={tab === key}
                 onClick={() => setTab(key)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                  tab === key ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                className={`inline-flex shrink-0 items-center rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+                  tab === key
+                    ? 'border-slate-950 bg-slate-950 text-white shadow-soft'
+                    : 'border-slate-200 bg-white text-slate-700 shadow-soft active:bg-slate-50'
                 }`}
               >
                 {label}
@@ -158,123 +189,225 @@ export const SadakaChurchDetailPage = () => {
 
           {tab === 'overview' ? (
             <>
-              <section className="grid gap-3 rounded border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2">
-                <div>
-                  <p className="text-sm font-medium text-slate-700">Transaction summary</p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                    <div className="rounded bg-slate-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Total</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">{church.transaction_summary?.total_transactions ?? 0}</p>
-                    </div>
-                    <div className="rounded bg-emerald-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-emerald-700">Paid</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">{church.transaction_summary?.paid_transactions ?? 0}</p>
-                    </div>
-                    <div className="rounded bg-red-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-red-700">Failed</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">{church.transaction_summary?.failed_transactions ?? 0}</p>
-                    </div>
+              <Card>
+                <h2 className="text-sm font-semibold text-ink">Transaction summary</h2>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-slate-50 p-2.5 sm:p-3">
+                    <p className="text-2xs uppercase tracking-wide text-ink-muted">Total</p>
+                    <p className="mt-1 text-base font-bold tabular-nums text-ink sm:text-lg">
+                      {church.transaction_summary?.total_transactions ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 p-2.5 sm:p-3">
+                    <p className="text-2xs uppercase tracking-wide text-emerald-800">Paid</p>
+                    <p className="mt-1 text-base font-bold tabular-nums text-ink sm:text-lg">
+                      {church.transaction_summary?.paid_transactions ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-red-50 p-2.5 sm:p-3">
+                    <p className="text-2xs uppercase tracking-wide text-red-800">Failed</p>
+                    <p className="mt-1 text-base font-bold tabular-nums text-ink sm:text-lg">
+                      {church.transaction_summary?.failed_transactions ?? 0}
+                    </p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-700">Withdrawal summary</p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-4">
-                    <div className="rounded bg-slate-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Total</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">{church.withdrawal_summary?.total_withdrawals ?? 0}</p>
-                    </div>
-                    <div className="rounded bg-emerald-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-emerald-700">Completed</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">{church.withdrawal_summary?.completed_withdrawals ?? 0}</p>
-                    </div>
-                    <div className="rounded bg-red-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-red-700">Failed</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">{church.withdrawal_summary?.failed_withdrawals ?? 0}</p>
-                    </div>
-                    <div className="rounded bg-amber-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-amber-700">Pending</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">{church.withdrawal_summary?.pending_withdrawals ?? 0}</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
+              </Card>
 
-              <section className="grid gap-3 rounded border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2">
-                <div><p className="text-sm text-slate-500">Name</p><p className="font-medium text-slate-950">{church.name}</p></div>
-                <div><p className="text-sm text-slate-500">Username</p><p className="font-medium text-slate-950">@{church.username}</p></div>
-                <div><p className="text-sm text-slate-500">Phone</p><p className="font-medium text-slate-950">{church.phone}</p></div>
-                <div><p className="text-sm text-slate-500">Email</p><p className="font-medium text-slate-950">{church.email ?? '—'}</p></div>
-                <div><p className="text-sm text-slate-500">Withdrawal method</p><p className="font-medium capitalize text-slate-950">{church.withdrawal_method}</p></div>
-                <div><p className="text-sm text-slate-500">Withdrawal number</p><p className="font-medium text-slate-950">{church.withdrawal_number}</p></div>
-                <div className="sm:col-span-2">
-                  <p className="text-sm text-slate-500">Payment URL</p>
-                  <p className="font-medium text-slate-950 break-all">{church.payment_url}</p>
-                  {church.payment_url ? (
-                    <a href={church.payment_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-brand-700 underline">
-                      Open public pay page
-                    </a>
-                  ) : null}
+              <Card>
+                <h2 className="text-sm font-semibold text-ink">Withdrawal summary</h2>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="rounded-xl bg-slate-50 p-2.5 sm:p-3">
+                    <p className="text-2xs uppercase tracking-wide text-ink-muted">Total</p>
+                    <p className="mt-1 text-base font-bold tabular-nums text-ink sm:text-lg">
+                      {church.withdrawal_summary?.total_withdrawals ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 p-2.5 sm:p-3">
+                    <p className="text-2xs uppercase tracking-wide text-emerald-800">Completed</p>
+                    <p className="mt-1 text-base font-bold tabular-nums text-ink sm:text-lg">
+                      {church.withdrawal_summary?.completed_withdrawals ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-red-50 p-2.5 sm:p-3">
+                    <p className="text-2xs uppercase tracking-wide text-red-800">Failed</p>
+                    <p className="mt-1 text-base font-bold tabular-nums text-ink sm:text-lg">
+                      {church.withdrawal_summary?.failed_withdrawals ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-amber-50 p-2.5 sm:p-3">
+                    <p className="text-2xs uppercase tracking-wide text-amber-800">Pending</p>
+                    <p className="mt-1 text-base font-bold tabular-nums text-ink sm:text-lg">
+                      {church.withdrawal_summary?.pending_withdrawals ?? 0}
+                    </p>
+                  </div>
                 </div>
-                <div className="sm:col-span-2"><p className="text-sm text-slate-500">Groups enabled</p><p className="font-medium text-slate-950">{church.groups_enabled ? 'Yes' : 'No'}</p></div>
-              </section>
+              </Card>
+
+              <Card padded={false}>
+                <div className="border-b border-slate-100 px-3.5 py-3 sm:px-5">
+                  <h2 className="text-sm font-semibold text-ink">Profile</h2>
+                </div>
+                <dl className="divide-y divide-slate-100">
+                  {(
+                    [
+                      ['Name', church.name],
+                      ['Username', `@${church.username}`],
+                      ['Phone', church.phone],
+                      ['Email', church.email ?? '—'],
+                      ['Withdrawal method', church.withdrawal_method],
+                      ['Withdrawal number', church.withdrawal_number],
+                      ['Groups enabled', church.groups_enabled ? 'Yes' : 'No']
+                    ] as const
+                  ).map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="flex items-baseline justify-between gap-3 px-3.5 py-3 text-sm sm:px-5"
+                    >
+                      <dt className="shrink-0 text-ink-muted">{label}</dt>
+                      <dd className="min-w-0 truncate text-right font-medium capitalize text-ink">
+                        {value}
+                      </dd>
+                    </div>
+                  ))}
+                  <div className="px-3.5 py-3 sm:px-5">
+                    <dt className="text-sm text-ink-muted">Payment URL</dt>
+                    {church.payment_url ? (
+                      <dd className="mt-1">
+                        <a
+                          href={church.payment_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block truncate text-sm font-medium text-brand-700 hover:underline"
+                          title={church.payment_url}
+                        >
+                          {church.payment_url}
+                        </a>
+                      </dd>
+                    ) : (
+                      <dd className="mt-1 text-sm font-medium text-ink">—</dd>
+                    )}
+                  </div>
+                </dl>
+              </Card>
             </>
           ) : null}
 
           {tab === 'transactions' ? (
-            <section className="card">
-              {txQuery.isLoading ? <p className="p-4 text-sm text-slate-600">Loading transactions…</p> : null}
-              {txQuery.isError ? <p className="p-4 text-sm text-red-700">Unable to load transactions.</p> : null}
-              <div className="divide-y divide-slate-100">
+            <section className="card overflow-hidden">
+              {txQuery.isLoading ? (
+                <p className="p-3.5 text-sm text-ink-muted sm:p-4" role="status">
+                  Loading transactions…
+                </p>
+              ) : null}
+              {txQuery.isError ? (
+                <p className="p-3.5 text-sm text-red-700 sm:p-4" role="alert">
+                  Unable to load transactions.
+                </p>
+              ) : null}
+              <ul className="divide-y divide-slate-100">
                 {(txQuery.data?.transactions ?? []).map((tx) => (
-                  <div key={tx.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                    <div>
-                      <p className="font-medium">{formatKesCurrency(tx.total_amount)}</p>
-                      <p className="text-slate-500">{tx.payer_phone} · {tx.status.replace(/_/g, ' ')}</p>
+                  <li key={tx.id} className="flex items-start justify-between gap-3 px-3.5 py-3.5 sm:px-5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold tabular-nums text-ink">
+                        {formatKesCurrency(tx.total_amount)}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <StatusBadge
+                          label={String(tx.status)}
+                          className="!px-2 !py-0 !text-[0.65rem]"
+                        />
+                        <span className="truncate text-xs text-ink-muted">{tx.payer_phone}</span>
+                      </div>
+                      <p className="mt-1 text-2xs text-ink-muted">{formatDate(tx.created_at)}</p>
                     </div>
-                    <p className="text-slate-400">{formatDate(tx.created_at)}</p>
-                  </div>
+                  </li>
                 ))}
-                {!txQuery.isLoading && (txQuery.data?.transactions?.length ?? 0) === 0 ? (
-                  <p className="p-4 text-sm text-slate-500">No transactions yet.</p>
-                ) : null}
-              </div>
+              </ul>
+              {!txQuery.isLoading && (txQuery.data?.transactions?.length ?? 0) === 0 ? (
+                <p className="p-3.5 text-sm text-ink-muted sm:p-4">No transactions yet.</p>
+              ) : null}
               {(txQuery.data?.total ?? 0) > 0 ? (
-                <div className="flex justify-between border-t border-slate-100 px-4 py-3 text-sm">
-                  <span>Page {txPage}</span>
-                  <div className="flex gap-2">
-                    <button type="button" disabled={txPage <= 1} onClick={() => setTxPage((p) => p - 1)} className="rounded border px-2 py-1 disabled:opacity-40">Prev</button>
-                    <button type="button" disabled={!txQuery.data?.has_more} onClick={() => setTxPage((p) => p + 1)} className="rounded border px-2 py-1 disabled:opacity-40">Next</button>
-                  </div>
+                <div className="flex items-center gap-2 border-t border-slate-100 px-3 py-2.5 sm:px-4">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="min-w-[5.5rem]"
+                    disabled={txPage <= 1}
+                    onClick={() => setTxPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <span className="flex-1 text-center text-xs text-ink-muted">Page {txPage}</span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="min-w-[5.5rem]"
+                    disabled={!txQuery.data?.has_more}
+                    onClick={() => setTxPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
                 </div>
               ) : null}
             </section>
           ) : null}
 
           {tab === 'withdrawals' ? (
-            <section className="card">
-              {wdQuery.isLoading ? <p className="p-4 text-sm text-slate-600">Loading withdrawals…</p> : null}
-              {wdQuery.isError ? <p className="p-4 text-sm text-red-700">Unable to load withdrawals.</p> : null}
-              <div className="divide-y divide-slate-100">
+            <section className="card overflow-hidden">
+              {wdQuery.isLoading ? (
+                <p className="p-3.5 text-sm text-ink-muted sm:p-4" role="status">
+                  Loading withdrawals…
+                </p>
+              ) : null}
+              {wdQuery.isError ? (
+                <p className="p-3.5 text-sm text-red-700 sm:p-4" role="alert">
+                  Unable to load withdrawals.
+                </p>
+              ) : null}
+              <ul className="divide-y divide-slate-100">
                 {(wdQuery.data?.withdrawals ?? []).map((w) => (
-                  <div key={w.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                    <div>
-                      <p className="font-medium">{formatKesCurrency(w.amount)}</p>
-                      <p className="capitalize text-slate-500">{w.status}</p>
+                  <li key={w.id} className="flex items-start justify-between gap-3 px-3.5 py-3.5 sm:px-5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold tabular-nums text-ink">
+                        {formatKesCurrency(w.amount)}
+                      </p>
+                      <div className="mt-1">
+                        <StatusBadge
+                          label={String(w.status)}
+                          className="!px-2 !py-0 !text-[0.65rem]"
+                        />
+                      </div>
+                      <p className="mt-1 text-2xs text-ink-muted">
+                        {formatDate(w.created_at || w.scheduled_for)}
+                      </p>
                     </div>
-                    <p className="text-slate-400">{formatDate(w.created_at || w.scheduled_for)}</p>
-                  </div>
+                  </li>
                 ))}
-                {!wdQuery.isLoading && (wdQuery.data?.withdrawals?.length ?? 0) === 0 ? (
-                  <p className="p-4 text-sm text-slate-500">No withdrawals yet.</p>
-                ) : null}
-              </div>
+              </ul>
+              {!wdQuery.isLoading && (wdQuery.data?.withdrawals?.length ?? 0) === 0 ? (
+                <p className="p-3.5 text-sm text-ink-muted sm:p-4">No withdrawals yet.</p>
+              ) : null}
               {(wdQuery.data?.total ?? 0) > 0 ? (
-                <div className="flex justify-between border-t border-slate-100 px-4 py-3 text-sm">
-                  <span>Page {wdPage}</span>
-                  <div className="flex gap-2">
-                    <button type="button" disabled={wdPage <= 1} onClick={() => setWdPage((p) => p - 1)} className="rounded border px-2 py-1 disabled:opacity-40">Prev</button>
-                    <button type="button" disabled={!wdQuery.data?.has_more} onClick={() => setWdPage((p) => p + 1)} className="rounded border px-2 py-1 disabled:opacity-40">Next</button>
-                  </div>
+                <div className="flex items-center gap-2 border-t border-slate-100 px-3 py-2.5 sm:px-4">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="min-w-[5.5rem]"
+                    disabled={wdPage <= 1}
+                    onClick={() => setWdPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <span className="flex-1 text-center text-xs text-ink-muted">Page {wdPage}</span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="min-w-[5.5rem]"
+                    disabled={!wdQuery.data?.has_more}
+                    onClick={() => setWdPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
                 </div>
               ) : null}
             </section>
