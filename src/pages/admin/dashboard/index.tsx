@@ -18,8 +18,8 @@ const BreakdownList = ({ title, items, tone }: { title: string; items: AdminBrea
 
   return (
     <Card>
-      <h2 className="text-base font-semibold text-ink">{title}</h2>
-      <div className="mt-4 space-y-3">
+      <h2 className="text-sm font-semibold text-ink sm:text-base">{title}</h2>
+      <div className="mt-3 space-y-3 sm:mt-4">
         {items.length === 0 ? <p className="text-sm text-ink-muted">No data yet.</p> : null}
         {items.map((item) => (
           <div key={`${title}-${item.category_id ?? item.group_id ?? item.name}`}>
@@ -27,9 +27,11 @@ const BreakdownList = ({ title, items, tone }: { title: string; items: AdminBrea
               <span className="truncate font-medium text-slate-700">{item.name}</span>
               <span className="shrink-0 tabular-nums text-slate-600">{formatKesCurrency(item.total)}</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 sm:h-2">
               <div
-                className={tone === 'emerald' ? 'h-2 rounded-full bg-brand-600' : 'h-2 rounded-full bg-sky-500'}
+                className={
+                  tone === 'emerald' ? 'h-full rounded-full bg-brand-600' : 'h-full rounded-full bg-sky-500'
+                }
                 style={{ width: `${Math.max((item.total / max) * 100, 4)}%` }}
               />
             </div>
@@ -137,47 +139,51 @@ export const AdminDashboardPage = () => {
   }
 
   const shortcuts = [
-    { to: '/admin/transactions', label: 'View transactions', desc: 'Filter and export gifts' },
-    { to: '/admin/events', label: 'Manage events', desc: 'Share fundraiser links' },
+    { to: '/admin/transactions', label: 'Transactions', desc: 'Filter and export gifts' },
+    { to: '/admin/events', label: 'Events', desc: 'Share fundraiser links' },
     ...(isSuper
       ? [
           { to: '/admin/withdrawals', label: 'Withdrawals', desc: 'Request a payout' },
-          { to: '/admin/church', label: 'Church settings', desc: 'Logo and destination' }
+          { to: '/admin/church', label: 'Settings', desc: 'Logo and destination' }
         ]
       : [{ to: '/admin/categories', label: 'Categories', desc: 'Offering purposes' }])
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in sm:space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Overview of giving. Figures auto-refresh every 30 seconds."
+        description="Overview of giving. Figures refresh every 30 seconds."
       />
 
-      <Card aria-label="Public payment link">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">
-              Share with givers
-            </p>
-            <h2 className="mt-1 text-base font-semibold text-ink">Public payment link</h2>
-            <p className="mt-1 text-sm text-ink-muted">
-              Members can open this link to give via M-Pesa
+      {/* Share strip — primary action for newly registered churches */}
+      <Card
+        aria-label="Public payment link"
+        className="border-brand-100 bg-gradient-to-br from-white via-white to-brand-50/50"
+      >
+        <div className="flex flex-col gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-brand-700">
+                Share with givers
+              </p>
               {churchUsername ? (
-                <>
-                  {' '}
-                  (<span className="font-medium text-slate-700">@{churchUsername}</span>)
-                </>
+                <span className="rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-medium text-brand-800">
+                  @{churchUsername}
+                </span>
               ) : null}
-              .
+            </div>
+            <h2 className="mt-1 text-sm font-semibold text-ink sm:text-base">Public payment link</h2>
+            <p className="mt-0.5 text-xs text-ink-muted sm:text-sm">
+              Members open this link to give via M-Pesa.
             </p>
             {churchQuery.isLoading ? (
-              <p className="mt-3 text-sm text-ink-muted" role="status">
+              <p className="mt-2 text-sm text-ink-muted" role="status">
                 Loading payment link…
               </p>
             ) : null}
             {churchQuery.isError ? (
-              <p className="mt-3 text-sm text-red-700" role="alert">
+              <p className="mt-2 text-sm text-red-700" role="alert">
                 Unable to load your payment link. Open{' '}
                 <Link to="/admin/church" className="font-semibold underline">
                   Church settings
@@ -190,23 +196,20 @@ export const AdminDashboardPage = () => {
                 href={paymentUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 block break-all text-sm font-medium text-brand-700 hover:underline"
+                className="mt-2 block truncate text-sm font-medium text-brand-700 hover:underline"
+                title={paymentUrl}
               >
                 {paymentUrl}
               </a>
             ) : null}
             {!churchQuery.isLoading && !churchQuery.isError && !paymentUrl ? (
-              <p className="mt-3 text-sm text-ink-muted">
+              <p className="mt-2 text-sm text-ink-muted">
                 Payment link is not available yet. Check church settings for your username.
               </p>
             ) : null}
           </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Button
-              type="button"
-              onClick={() => void copyPaymentLink()}
-              disabled={!paymentUrl}
-            >
+          <div className="mobile-actions sm:justify-start">
+            <Button type="button" onClick={() => void copyPaymentLink()} disabled={!paymentUrl}>
               Copy link
             </Button>
             {paymentUrl ? (
@@ -215,14 +218,18 @@ export const AdminDashboardPage = () => {
                 variant="secondary"
                 onClick={() => window.open(paymentUrl, '_blank', 'noopener,noreferrer')}
               >
-                Open
+                Open link
               </Button>
             ) : null}
           </div>
         </div>
       </Card>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5" aria-label="Key metrics">
+      {/* Metrics: always 2-up on phones so cards don’t tower */}
+      <section
+        className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-3 2xl:grid-cols-5"
+        aria-label="Key metrics"
+      >
         {cards.map((card) => (
           <StatCard
             key={card.label}
@@ -230,13 +237,28 @@ export const AdminDashboardPage = () => {
             value={card.value}
             hint={card.hint}
             accent={card.accent ?? 'neutral'}
+            compact
           />
         ))}
       </section>
 
+      {/* Quick actions: horizontal chips on mobile, cards on sm+ */}
       <section aria-label="Quick actions">
-        <h2 className="text-base font-semibold text-ink">Quick actions</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <h2 className="text-sm font-semibold text-ink sm:text-base">Quick actions</h2>
+
+        <div className="mt-2 mobile-chip-row sm:hidden">
+          {shortcuts.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-ink shadow-soft active:bg-slate-50"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-3 hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4">
           {shortcuts.map((item) => (
             <Link
               key={item.to}
@@ -253,22 +275,22 @@ export const AdminDashboardPage = () => {
       {activeEvents.length > 0 ? (
         <Card aria-label="Active events">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-ink">Active events</h2>
+            <h2 className="text-sm font-semibold text-ink sm:text-base">Active events</h2>
             <Link to="/admin/events" className="text-sm font-semibold text-brand-700 hover:underline">
               View all
             </Link>
           </div>
-          <ul className="mt-3 divide-y divide-slate-100">
+          <ul className="mt-2 divide-y divide-slate-100 sm:mt-3">
             {activeEvents.slice(0, 3).map((event) => (
-              <li key={event.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <div>
+              <li key={event.id} className="flex items-start justify-between gap-3 py-3">
+                <div className="min-w-0">
                   <Link
                     to={`/admin/events/${event.id}`}
-                    className="font-medium text-ink hover:text-brand-700 hover:underline"
+                    className="block truncate font-medium text-ink hover:text-brand-700 hover:underline"
                   >
                     {event.title}
                   </Link>
-                  <p className="text-xs text-ink-muted">
+                  <p className="mt-0.5 text-xs text-ink-muted">
                     Raised {formatKesCurrency(event.totals?.paid_gross ?? 0)}
                     {event.target_amount != null
                       ? ` of ${formatKesCurrency(event.target_amount)}`
@@ -281,7 +303,7 @@ export const AdminDashboardPage = () => {
           </ul>
         </Card>
       ) : isSuper ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-white p-4 text-sm text-ink-muted">
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white px-3.5 py-3.5 text-sm text-ink-muted sm:p-4">
           No active events.{' '}
           <Link to="/admin/events" className="font-semibold text-brand-700 hover:underline">
             Create a fundraiser
@@ -290,40 +312,42 @@ export const AdminDashboardPage = () => {
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 xl:grid-cols-2">
         <BreakdownList title="Category breakdown" items={dashboard.by_category} tone="emerald" />
         <BreakdownList title="Group breakdown" items={dashboard.by_group} tone="sky" />
       </div>
 
       <Card padded={false}>
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 sm:px-5">
-          <h2 className="text-base font-semibold text-ink">Recent transactions</h2>
-          <Link to="/admin/transactions" className="text-sm font-semibold text-brand-700 hover:underline">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3.5 py-3 sm:px-5">
+          <h2 className="text-sm font-semibold text-ink sm:text-base">Recent transactions</h2>
+          <Link to="/admin/transactions" className="shrink-0 text-sm font-semibold text-brand-700 hover:underline">
             View all
           </Link>
         </div>
         <div className="divide-y divide-slate-100">
           {recentTransactions.length === 0 ? (
-            <p className="p-4 text-sm text-ink-muted">No recent transactions.</p>
+            <p className="p-3.5 text-sm text-ink-muted sm:p-4">No recent transactions.</p>
           ) : null}
           {recentTransactions.map((transaction) => (
             <div
               key={transaction.id}
-              className="grid gap-2 p-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:px-5"
+              className="flex items-start justify-between gap-3 p-3.5 text-sm sm:grid sm:grid-cols-[1fr_auto] sm:items-center sm:gap-2 sm:px-5 sm:py-4"
             >
-              <div>
-                <p className="font-medium text-ink">
+              <div className="min-w-0">
+                <p className="truncate font-medium text-ink">
                   {transaction.payer_name || transaction.payer_phone}
                 </p>
-                <p className="text-ink-muted">
+                <p className="mt-0.5 truncate text-xs text-ink-muted sm:text-sm">
                   {transaction.mpesa_ref || 'No M-PESA ref'} · {formatDate(transaction.created_at)}
                 </p>
               </div>
-              <div className="text-left sm:text-right">
+              <div className="shrink-0 text-right">
                 <p className="font-semibold tabular-nums text-ink">
                   {formatKesCurrency(transaction.total_amount)}
                 </p>
-                <StatusBadge label={String(transaction.status)} />
+                <div className="mt-1 flex justify-end">
+                  <StatusBadge label={String(transaction.status)} />
+                </div>
               </div>
             </div>
           ))}

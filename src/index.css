@@ -33,20 +33,54 @@
 }
 
 @layer components {
+  /* Admin / console content frame — calmer on narrow screens */
   .page-shell {
-    @apply mx-auto w-full max-w-content px-4 py-6 sm:px-6 lg:px-8 lg:py-8;
+    @apply mx-auto w-full max-w-content px-3.5 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8;
+    padding-left: max(0.875rem, env(safe-area-inset-left));
+    padding-right: max(0.875rem, env(safe-area-inset-right));
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 640px) {
+    .page-shell {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .page-shell {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
   }
 
   .page-header {
-    @apply mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-start sm:justify-between;
+    @apply mb-4 flex flex-col gap-2.5 sm:mb-7 sm:flex-row sm:items-start sm:justify-between sm:gap-3;
   }
 
   .page-title {
-    @apply text-2xl font-bold tracking-tight text-ink sm:text-[1.75rem];
+    @apply text-xl font-bold tracking-tight text-ink sm:text-2xl lg:text-[1.75rem];
   }
 
   .page-subtitle {
-    @apply mt-1 text-sm text-ink-muted;
+    @apply mt-0.5 text-sm leading-relaxed text-ink-muted sm:mt-1;
+  }
+
+  /*
+   * AppShell already shows the screen name in the mobile top bar.
+   * Avoid stacking a second large H1 on narrow viewports.
+   */
+  .admin-console .page-header .page-title {
+    @apply max-md:sr-only;
+  }
+
+  .admin-console .page-header .page-subtitle {
+    @apply max-md:mt-0;
+  }
+
+  .admin-console .page-header {
+    @apply max-md:mb-3;
   }
 
   .card {
@@ -54,7 +88,7 @@
   }
 
   .card-pad {
-    @apply p-4 sm:p-5;
+    @apply p-3.5 sm:p-5;
   }
 
   .field-label {
@@ -75,11 +109,31 @@
   .surface-muted {
     @apply rounded-xl border border-slate-100 bg-surface-muted;
   }
+
+  /* Dense metric tiles for phone-width dashboards */
+  .stat-card {
+    @apply rounded-xl border p-3 shadow-card sm:p-5;
+  }
+
+  .stat-card-value {
+    @apply mt-1.5 text-lg font-bold tracking-tight text-ink tabular-nums sm:mt-2 sm:text-2xl;
+  }
+
+  /* Horizontal chip row (quick actions, filters) */
+  .mobile-chip-row {
+    @apply -mx-0.5 flex gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-none;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-chip-row > * {
+    scroll-snap-align: start;
+  }
 }
 
 @layer utilities {
   .admin-table-wrap {
-    @apply -mx-1 max-w-full overflow-x-auto rounded-xl border border-slate-200/80 bg-white shadow-card;
+    @apply -mx-0.5 max-w-full overflow-x-auto rounded-xl border border-slate-200/80 bg-white shadow-card sm:-mx-1;
   }
 
   .admin-table {
@@ -104,5 +158,39 @@
 
   .safe-pb {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-pt {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+
+  .md\:safe-pt-0 {
+    /* no-op utility placeholder; real reset below in md media */
+  }
+
+  @media (min-width: 768px) {
+    .md\:safe-pt-0 {
+      padding-top: 0;
+    }
+  }
+
+  /* Hide scrollbars on intentional horizontal rails */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Stack action buttons full-width under sm */
+  .mobile-actions {
+    @apply flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap;
+  }
+
+  .mobile-actions > button,
+  .mobile-actions > a {
+    @apply w-full justify-center sm:w-auto;
   }
 }

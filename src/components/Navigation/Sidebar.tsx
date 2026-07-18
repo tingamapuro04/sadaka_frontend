@@ -9,6 +9,7 @@ import {
   IconCard,
   IconChart,
   IconClipboard,
+  IconClose,
   IconFolder,
   IconHome,
   IconLock,
@@ -154,10 +155,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       : '/';
 
   const linkClass = (active: boolean) =>
-    `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+    `group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
       active
         ? 'bg-brand-600 text-white shadow-soft'
-        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+        : 'text-slate-300 hover:bg-slate-800 hover:text-white active:bg-slate-800'
     }`;
 
   return (
@@ -173,30 +174,38 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       <aside
         id="app-sidebar"
         aria-label="Primary"
-        className={`fixed left-0 top-0 z-40 flex h-screen w-64 transform flex-col bg-slate-950 text-white transition-transform duration-200 ease-out md:relative md:z-10 md:translate-x-0 md:transform-none ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed left-0 top-0 z-40 flex h-[100dvh] w-[min(18rem,88vw)] transform flex-col bg-slate-950 text-white transition-transform duration-200 ease-out safe-pt md:relative md:z-10 md:h-auto md:w-64 md:translate-x-0 md:transform-none md:safe-pt-0 ${
+          isOpen ? 'translate-x-0 shadow-overlay' : '-translate-x-full'
         }`}
       >
-        <div className="border-b border-slate-800/80 p-4">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 p-4">
           <Link
             to={brandHomeTo}
             onClick={onClose}
-            className="inline-flex items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+            className="inline-flex min-w-0 items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
           >
-            <BrandMark className="h-10 w-10" />
-            <div>
+            <BrandMark className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
+            <div className="min-w-0">
               <p className="text-sm font-bold tracking-tight">Sadaka</p>
-              <p className="text-2xs text-slate-400">
+              <p className="truncate text-2xs text-slate-400">
                 {isSadakaPortalUser ? 'Platform console' : isAuthenticated ? 'Church console' : 'Giving platform'}
               </p>
             </div>
           </Link>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white md:hidden"
+            aria-label="Close menu"
+            onClick={onClose}
+          >
+            <IconClose className="h-5 w-5" />
+          </button>
         </div>
 
-        <nav className="flex-1 space-y-6 overflow-y-auto p-3" aria-label="Sidebar">
+        <nav className="flex-1 space-y-5 overflow-y-auto overscroll-y-contain p-3 safe-pb" aria-label="Sidebar">
           {sections.map((section) => (
             <div key={section.title}>
-              <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-wider text-slate-500">
+              <p className="mb-1.5 px-3 text-2xs font-semibold uppercase tracking-wider text-slate-500">
                 {section.title}
               </p>
               <ul className="space-y-0.5">
@@ -242,7 +251,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           ))}
         </nav>
 
-        <div className="border-t border-slate-800/80 p-4">
+        <div className="border-t border-slate-800/80 p-4 safe-pb">
           <p className="text-2xs leading-relaxed text-slate-500">
             Secure M-Pesa collections for churches across Kenya.
           </p>

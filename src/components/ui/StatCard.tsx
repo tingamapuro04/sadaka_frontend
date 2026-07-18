@@ -6,6 +6,8 @@ type StatCardProps = {
   hint?: string;
   accent?: 'brand' | 'neutral' | 'sky';
   icon?: ReactNode;
+  /** Tighter layout for dense mobile metric grids */
+  compact?: boolean;
 };
 
 const accentRing: Record<NonNullable<StatCardProps['accent']>, string> = {
@@ -14,13 +16,38 @@ const accentRing: Record<NonNullable<StatCardProps['accent']>, string> = {
   sky: 'border-sky-100 bg-gradient-to-br from-white to-sky-50/50'
 };
 
-export const StatCard = ({ label, value, hint, accent = 'neutral', icon }: StatCardProps) => (
-  <div className={`rounded-xl border p-4 shadow-card sm:p-5 ${accentRing[accent]}`}>
-    <div className="flex items-start justify-between gap-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
-      {icon ? <div className="text-ink-subtle">{icon}</div> : null}
+export const StatCard = ({
+  label,
+  value,
+  hint,
+  accent = 'neutral',
+  icon,
+  compact = false
+}: StatCardProps) => (
+  <div
+    className={`stat-card ${accentRing[accent]} ${compact ? 'min-h-[5.5rem] sm:min-h-0' : ''}`}
+  >
+    <div className="flex items-start justify-between gap-2">
+      <p
+        className={`font-medium uppercase tracking-wide text-ink-muted ${
+          compact ? 'text-[0.65rem] leading-tight sm:text-xs' : 'text-xs'
+        }`}
+      >
+        {label}
+      </p>
+      {icon ? <div className="shrink-0 text-ink-subtle">{icon}</div> : null}
     </div>
-    <p className="mt-2 text-2xl font-bold tracking-tight text-ink tabular-nums">{value}</p>
-    {hint ? <p className="mt-1 text-xs text-ink-muted">{hint}</p> : null}
+    <p
+      className={`stat-card-value ${
+        compact ? 'text-[1.125rem] leading-snug sm:text-2xl' : ''
+      }`}
+    >
+      {value}
+    </p>
+    {hint ? (
+      <p className={`text-ink-muted ${compact ? 'mt-0.5 text-[0.65rem] sm:mt-1 sm:text-xs' : 'mt-1 text-xs'}`}>
+        {hint}
+      </p>
+    ) : null}
   </div>
 );
