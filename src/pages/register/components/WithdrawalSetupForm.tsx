@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { PhoneInput } from '../../../components/shared/PhoneInput';
+import { Select } from '../../../components/ui';
 
 type WithdrawalValues = {
   withdrawal_method: 'phone' | 'till' | 'paybill';
@@ -40,12 +41,9 @@ export const WithdrawalSetupForm = ({
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-slate-900">Step 3 of 3: Withdrawal Setup</h2>
       <div>
-        <label htmlFor={methodId} className="mb-2 block text-sm font-semibold text-slate-700">
-          Withdrawal method
-        </label>
-        <select
+        <Select
           id={methodId}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          label="Withdrawal method"
           value={values.withdrawal_method}
           onChange={(event) => {
             const method = event.target.value as WithdrawalValues['withdrawal_method'];
@@ -61,7 +59,7 @@ export const WithdrawalSetupForm = ({
           <option value="phone">Phone</option>
           <option value="till">Till</option>
           <option value="paybill">Paybill</option>
-        </select>
+        </Select>
         <p className="mt-1 text-xs text-slate-500">
           Choose the withdrawal method your church will use for funds transfer.
         </p>

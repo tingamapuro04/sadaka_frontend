@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Input, Modal } from '../../../components/ui';
+import { Input, Modal, Select } from '../../../components/ui';
 import type { ChurchEvent, CreateEventPayload, EventStatus, UpdateEventPayload } from '../types';
 
 type EventFormModalProps = {
@@ -136,18 +136,15 @@ export const EventFormModal = ({
           maxLength={80}
         />
 
-        <label className="block text-sm">
-          <span className="mb-1 block font-semibold text-slate-700">Status</span>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as EventStatus)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-          >
-            <option value="active">Active (accepting payments)</option>
-            <option value="draft">Draft (hidden from public)</option>
-            <option value="closed">Closed (no new payments)</option>
-          </select>
-        </label>
+        <Select
+          label="Status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as EventStatus)}
+        >
+          <option value="active">Active (accepting payments)</option>
+          <option value="draft">Draft (hidden from public)</option>
+          <option value="closed">Closed (no new payments)</option>
+        </Select>
 
         <Input
           label="Target amount KES"

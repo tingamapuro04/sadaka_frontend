@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PhoneInput } from '../../../../components/shared/PhoneInput';
-import { Button } from '../../../../components/ui';
+import { Button, Select } from '../../../../components/ui';
 import type { AdminListItem, TransactionFiltersState } from '../../types';
 
 interface TransactionFiltersProps {
@@ -124,20 +124,19 @@ export const TransactionFilters = ({
             advancedOpen ? 'grid' : 'hidden'
           } sm:grid`}
         >
-          <label className="hidden text-sm sm:block">
-            <span className="mb-1 block field-label">Status</span>
-            <select
+          <div className="hidden sm:block">
+            <Select
+              label="Status"
               value={filters.status}
               onChange={(event) => update('status', event.target.value)}
-              className="field-control"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.value || 'all'} value={option.value}>
                   {option.label === 'Awaiting' ? 'Awaiting payment' : option.label}
                 </option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </div>
 
           <PhoneInput
             label="Phone"
@@ -178,21 +177,18 @@ export const TransactionFilters = ({
             />
           </label>
 
-          <label className="text-sm">
-            <span className="mb-1 block field-label">Category</span>
-            <select
-              value={filters.category_id}
-              onChange={(event) => update('category_id', event.target.value)}
-              className="field-control"
-            >
-              <option value="">All</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Category"
+            value={filters.category_id}
+            onChange={(event) => update('category_id', event.target.value)}
+          >
+            <option value="">All</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
         </div>
       </div>
 

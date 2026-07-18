@@ -1,56 +1,93 @@
-import { forwardRef, type ReactNode, type SelectHTMLAttributes, useId } from 'react';
+import {
+  Children,
+  isValidElement,
+  useMemo,
+  type ChangeEvent,
+  type ReactNode,
+  type SelectHTMLAttributes
+} from 'react';
+import { DropdownSelect, type DropdownOption } from './DropdownSelect';
 
-type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange' | 'value' | 'children'> & {
   label?: string;
   error?: string;
   hint?: string;
   optional?: boolean;
+  value?: string | number | readonly string[];
+  onChange?: (event: ChangeEvent<HTMLSelectElement>) => void;
   children: ReactNode;
 };
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, hint, optional, className = '', id, children, ...rest }, ref) => {
-    const autoId = useId();
-    const selectId = id ?? autoId;
-    const describedBy = error ? `${selectId}-error` : hint ? `${selectId}-hint` : undefined;
+function optionsFromChildren(children: ReactNode): DropdownOption[] {
+  const options: DropdownOption[] = [];
 
-    return (
-      <div className="flex flex-col gap-1.5">
-        {label ? (
-          <label htmlFor={selectId} className="field-label">
-            {label}
-            {optional ? <span className="ml-1 font-normal text-ink-subtle">(optional)</span> : null}
-          </label>
-        ) : null}
-        <div className="relative">
-          <select
-            ref={ref}
-            id={selectId}
-            aria-invalid={Boolean(error)}
-            aria-describedby={describedBy}
-            className={`field-control appearance-none pr-10 ${error ? 'field-control-error' : ''} ${className}`}
-            {...rest}
-          >
-            {children}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-ink-subtle">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-        {error ? (
-          <span id={`${selectId}-error`} className="text-xs font-medium text-red-600" role="alert">
-            {error}
-          </span>
-        ) : hint ? (
-          <span id={`${selectId}-hint`} className="text-xs text-ink-muted">
-            {hint}
-          </span>
-        ) : null}
-      </div>
-    );
-  }
-);
+  Children.forEach(children, (child) => {
+    if (!isValidElement(child)) return;
+    // Support both <option> and fragments of options
+    if (child.type === 'option') {
+      const props = child.props as {
+        value?: string | number;
+        children?: ReactNode;
+        disabled?: boolean;
+      };
+      options.push({
+        value: props.value == null ? '' : String(props.value),
+        label: String(props.children ?? ''),
+        disabled: Boolean(props.disabled)
+      });
+      return;
+    }
+    if (child.props && typeof child.props === 'object' && 'children' in child.props) {
+      options.push(...optionsFromChildren((child.props as { children?: ReactNode }).children));
+    }
+  });
+
+  return options;
+}
+
+/**
+ * Drop-in select API backed by DropdownSelect so mobile never opens the OS picker sheet.
+ */
+export const Select = ({
+  label,
+  error,
+  hint,
+  optional,
+  className = '',
+  id,
+  children,
+  value,
+  onChange,
+  disabled,
+  'aria-label': ariaLabel
+}: SelectProps) => {
+  const options = useMemo(() => optionsFromChildren(children), [children]);
+  const stringValue = value == null ? '' : String(Array.isArray(value) ? value[0] ?? '' : value);
+
+  return (
+    <div className={className}>
+      <DropdownSelect
+        id={id}
+        label={label}
+        optional={optional}
+        value={stringValue}
+        options={options}
+        disabled={disabled}
+        error={error}
+        aria-label={ariaLabel}
+        onChange={(next) => {
+          if (!onChange) return;
+          // Synthesize a change event-shaped object for existing handlers
+          const event = {
+            target: { value: next },
+            currentTarget: { value: next }
+          } as ChangeEvent<HTMLSelectElement>;
+          onChange(event);
+        }}
+      />
+      {!error && hint ? <p className="mt-1 text-xs text-ink-muted">{hint}</p> : null}
+    </div>
+  );
+};
 
 Select.displayName = 'Select';

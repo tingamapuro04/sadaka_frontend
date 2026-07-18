@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button, EmptyState, PageHeader, StatusBadge, useToast } from '../../../components/ui';
+import {
+  Button,
+  EmptyState,
+  PageHeader,
+  Select,
+  StatusBadge,
+  useToast
+} from '../../../components/ui';
 import { IconCard } from '../../../components/icons';
 import { formatDate, formatKesCurrency } from '../../../utils/formatters';
 import {
@@ -169,39 +176,33 @@ export const SadakaTransactionsPage = () => {
             advancedOpen ? 'grid' : 'hidden'
           } sm:grid`}
         >
-          <label className="text-sm sm:col-span-1">
-            <span className="mb-1 block field-label">Church</span>
-            <select
-              value={churchId}
-              onChange={(e) => {
-                setChurchId(e.target.value);
-                resetPage();
-              }}
-              className="field-control"
-            >
-              <option value="">All</option>
-              {(churchesQuery.data?.churches ?? []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block field-label">Source</span>
-            <select
-              value={source}
-              onChange={(e) => {
-                setSource(e.target.value);
-                resetPage();
-              }}
-              className="field-control"
-            >
-              <option value="">All</option>
-              <option value="offering">Offering</option>
-              <option value="event">Event</option>
-            </select>
-          </label>
+          <Select
+            label="Church"
+            value={churchId}
+            onChange={(e) => {
+              setChurchId(e.target.value);
+              resetPage();
+            }}
+          >
+            <option value="">All</option>
+            {(churchesQuery.data?.churches ?? []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Source"
+            value={source}
+            onChange={(e) => {
+              setSource(e.target.value);
+              resetPage();
+            }}
+          >
+            <option value="">All</option>
+            <option value="offering">Offering</option>
+            <option value="event">Event</option>
+          </Select>
           <label className="text-sm">
             <span className="mb-1 block field-label">Phone</span>
             <input

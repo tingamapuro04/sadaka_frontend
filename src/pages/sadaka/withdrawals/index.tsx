@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button, EmptyState, PageHeader, StatusBadge, useToast } from '../../../components/ui';
+import {
+  Button,
+  EmptyState,
+  PageHeader,
+  Select,
+  StatusBadge,
+  useToast
+} from '../../../components/ui';
 import { IconWallet } from '../../../components/icons';
 import { formatDate, formatKesCurrency } from '../../../utils/formatters';
 import {
@@ -145,15 +152,14 @@ export const SadakaWithdrawalsPage = () => {
       </div>
 
       <section className="card card-pad space-y-3">
-        <label className="block text-sm">
-          <span className="mb-1 block field-label">Church</span>
-          <select
+        <div className="sm:max-w-md">
+          <Select
+            label="Church"
             value={churchId}
             onChange={(event) => {
               setChurchId(event.target.value);
               setPage(1);
             }}
-            className="field-control sm:max-w-md"
           >
             <option value="">All churches</option>
             {(churchesQuery.data?.churches ?? []).map((church) => (
@@ -161,8 +167,8 @@ export const SadakaWithdrawalsPage = () => {
                 {church.name}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-ink-muted sm:text-sm">
             {withdrawalsQuery.isLoading
