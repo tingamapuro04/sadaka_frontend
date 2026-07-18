@@ -102,11 +102,15 @@ describe('PayPage component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Grace Community')).toBeInTheDocument();
-      expect(screen.getByText('Tithe')).toBeInTheDocument();
-      expect(screen.getByText('Missions')).toBeInTheDocument();
+      // Default category pre-selected in the custom dropdown trigger
+      expect(screen.getByRole('button', { name: /^Category$/i })).toHaveTextContent('Tithe');
       expect(screen.getByText(/Group \/ fellowship/i)).toBeInTheDocument();
-      expect(screen.getByText('Youth')).toBeInTheDocument();
     });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Category$/i }));
+    expect(screen.getByRole('option', { name: 'Missions' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Group \/ fellowship/i }));
+    expect(screen.getByRole('option', { name: 'Youth' })).toBeInTheDocument();
 
     expect(screen.getByText(/KES 2 platform fee/i)).toBeInTheDocument();
     expect(screen.getByText(/M-Pesa prompt/i)).toBeInTheDocument();
@@ -131,11 +135,11 @@ describe('PayPage component', () => {
     const phoneInput = screen.getByPlaceholderText('712345678');
     fireEvent.change(phoneInput, { target: { value: '123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Add category/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ Add category/i }));
 
-    const categorySelects = screen.getAllByRole('combobox');
-    fireEvent.change(categorySelects[0]!, { target: { value: 'cat-1' } });
-    fireEvent.change(categorySelects[1]!, { target: { value: 'cat-2' } });
+    // First row defaults to Tithe; choose Missions on the second row via custom dropdown
+    fireEvent.click(screen.getByRole('button', { name: /Category 2/i }));
+    fireEvent.click(screen.getByRole('option', { name: 'Missions' }));
 
     const amountInputs = screen.getAllByPlaceholderText('0');
     fireEvent.change(amountInputs[0]!, { target: { value: '500' } });

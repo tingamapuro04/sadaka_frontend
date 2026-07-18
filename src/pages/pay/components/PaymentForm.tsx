@@ -1,8 +1,8 @@
 import { useForm, FormProvider, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRef, useEffect } from 'react';
 import { PhoneInput } from '../../../components/shared/PhoneInput';
+import { DropdownSelect } from '../../../components/ui/DropdownSelect';
 import { SummaryCard } from './SummaryCard';
 import { kenyanPhoneSchema } from '../../../utils/validation';
 import type { Church, Category, Group, PaymentFormValues, PaymentSubmission } from '../types';
@@ -81,15 +81,7 @@ export const PaymentForm = ({
     control,
     name: 'items'
   });
-  const lastFieldRefMap = useRef<Record<number, HTMLSelectElement | null>>({});
   const watchedItems = watch('items');
-
-  useEffect(() => {
-    const lastIndex = fields.length - 1;
-    if (lastIndex >= 0 && lastFieldRefMap.current[lastIndex]) {
-      lastFieldRefMap.current[lastIndex]?.focus();
-    }
-  }, [fields.length]);
 
   const onFormSubmit = (data: PaymentFormValues) => {
     const submission: PaymentSubmission = {
@@ -104,6 +96,11 @@ export const PaymentForm = ({
 
     onSubmit(submission);
   };
+
+  const groupOptions = [
+    { value: '', label: 'No specific group' },
+    ...groups.map((group) => ({ value: group.id, label: group.name }))
+  ];
 
   return (
     <FormProvider {...methods}>
@@ -153,34 +150,22 @@ export const PaymentForm = ({
           />
 
           {church.groups_enabled && groups.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="group_id" className="field-label text-xs">
-                Group / fellowship <span className="font-normal text-ink-muted">(optional)</span>
-              </label>
-              <div className="relative">
-                <select
-                  id="group_id"
-                  {...register('group_id')}
+            <Controller
+              name="group_id"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <DropdownSelect
+                  label="Group / fellowship"
+                  optional
+                  value={value || ''}
+                  onChange={onChange}
                   disabled={isSubmitting}
-                  className={`${fieldClass} appearance-none pr-9`}
-                >
-                  <option value="">No specific group</option>
-                  {groups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-              {errors.group_id && (
-                <span className="text-xs font-medium text-red-500">{errors.group_id.message}</span>
+                  options={groupOptions}
+                  placeholder="No specific group"
+                  error={errors.group_id?.message}
+                />
               )}
-            </div>
+            />
           )}
         </section>
 
@@ -208,7 +193,15 @@ export const PaymentForm = ({
               );
               const categoryError = errors.items?.[index]?.category_id?.message;
               const amountError = errors.items?.[index]?.amount?.message;
-              const categoryRegister = register(`items.${index}.category_id`);
+
+              const categoryOptions = [
+                { value: '', label: 'Select category' },
+                ...categories.map((category) => ({
+                  value: category.id,
+                  label: category.name,
+                  disabled: selectedCategoryIds.has(category.id)
+                }))
+              ];
 
               return (
                 <div
@@ -216,35 +209,22 @@ export const PaymentForm = ({
                   className="rounded-xl border border-slate-200 bg-slate-50/60 p-3"
                 >
                   <div className="flex flex-col gap-2.5">
-                    <div className="min-w-0">
-                      <label className="mb-1 block text-2xs font-medium text-ink-muted">
-                        Category {fields.length > 1 ? index + 1 : ''}
-                      </label>
-                      <select
-                        {...categoryRegister}
-                        ref={(el) => {
-                          categoryRegister.ref(el);
-                          if (el) lastFieldRefMap.current[index] = el;
-                        }}
-                        disabled={isSubmitting}
-                        aria-label={`Category ${index + 1}`}
-                        className={fieldClass}
-                      >
-                        <option value="">Select category</option>
-                        {categories.map((category) => (
-                          <option
-                            key={category.id}
-                            value={category.id}
-                            disabled={selectedCategoryIds.has(category.id)}
-                          >
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                      {categoryError && (
-                        <span className="mt-1 block text-xs font-medium text-red-500">{categoryError}</span>
+                    <Controller
+                      name={`items.${index}.category_id`}
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <DropdownSelect
+                          label={fields.length > 1 ? `Category ${index + 1}` : 'Category'}
+                          value={value || ''}
+                          onChange={onChange}
+                          disabled={isSubmitting}
+                          options={categoryOptions}
+                          placeholder="Select category"
+                          error={categoryError}
+                          aria-label={`Category ${index + 1}`}
+                        />
                       )}
-                    </div>
+                    />
 
                     <div className="flex items-end gap-2">
                       <div className="min-w-0 flex-1">
