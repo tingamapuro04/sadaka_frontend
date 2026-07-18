@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { env } from '../../../config/env.config';
 import { OTP_CODE_LENGTH, OTP_RESEND_COOLDOWN_SECONDS } from '../../../config/constants';
+import { Button } from '../../../components/ui';
 import { formatKesCurrency } from '../../../utils/formatters';
 import type { AdminChurch } from '../types';
 
@@ -113,9 +114,15 @@ export const WithdrawalForm = ({
       (Boolean(values.scheduled_for) && new Date(values.scheduled_for).getTime() > Date.now()));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/45 p-0 sm:items-center sm:p-4"
+      role="presentation"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !busy) close();
+      }}
+    >
       <form
-        className="w-full max-w-lg rounded-lg bg-white p-5 shadow-xl"
+        className="max-h-[min(92vh,40rem)] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white shadow-overlay safe-pb sm:rounded-2xl"
         onSubmit={(event) => {
           event.preventDefault();
           if (otpStep) {
@@ -125,197 +132,202 @@ export const WithdrawalForm = ({
           onRequestOtp(values);
         }}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-950">
+        <div className="sticky top-0 z-[1] flex items-start justify-between gap-3 border-b border-slate-100 bg-white/95 px-4 py-3.5 backdrop-blur-sm sm:px-5">
+          <div className="min-w-0">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-brand-700">Payout</p>
+            <h2 className="mt-0.5 text-lg font-semibold text-ink">
               {otpStep ? 'Confirm with SMS code' : 'Request withdrawal'}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-xs text-ink-muted sm:text-sm">
               {otpStep
-                ? 'Enter the code sent to the church admin phone to authorize this payout.'
-                : 'Destination is pulled from the church profile automatically.'}
+                ? 'Enter the code sent to the church admin phone.'
+                : 'Destination comes from your church profile.'}
             </p>
           </div>
-          <button type="button" onClick={close} className="rounded border border-slate-300 px-2 py-1 text-sm">
+          <Button type="button" variant="secondary" size="sm" onClick={close} disabled={busy}>
             Close
-          </button>
+          </Button>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded border border-slate-200 bg-slate-50 p-3 text-sm">
-            <p className="text-slate-500">Method</p>
-            <p className="font-medium capitalize text-slate-900">{church.withdrawal_method}</p>
-          </div>
-          <div className="rounded border border-slate-200 bg-slate-50 p-3 text-sm">
-            <p className="text-slate-500">Destination</p>
-            <p className="font-medium text-slate-900">{church.withdrawal_number}</p>
-          </div>
-          <div className="rounded border border-slate-200 bg-slate-50 p-3 text-sm sm:col-span-2">
-            <p className="text-slate-500">Available balance</p>
-            <p className="font-medium text-slate-900">{formatKesCurrency(availableBalance)}</p>
-          </div>
-        </div>
-
-        {!otpStep ? (
-          <div className="mt-4 grid gap-3">
-            <div className="rounded border border-slate-200 bg-amber-50 p-3 text-sm sm:col-span-2">
-              <p className="text-amber-700">Withdrawal mode</p>
-              <p className="font-medium capitalize text-amber-950">
-                {withdrawalMode === 'instant' ? 'Instant' : 'Scheduled'}
-              </p>
-              <p className="mt-1 text-amber-800">
-                {withdrawalMode === 'instant'
-                  ? 'Withdrawals are processed immediately in development.'
-                  : 'Withdrawals are queued for the next scheduled processing window.'}
+        <div className="space-y-4 px-4 py-4 sm:px-5">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+              <p className="text-2xs text-ink-muted sm:text-xs">Method</p>
+              <p className="mt-0.5 font-semibold capitalize text-ink">{church.withdrawal_method}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+              <p className="text-2xs text-ink-muted sm:text-xs">Destination</p>
+              <p className="mt-0.5 truncate font-semibold tabular-nums text-ink">
+                {church.withdrawal_number}
               </p>
             </div>
+            <div className="col-span-2 rounded-xl border border-brand-100 bg-gradient-to-br from-white to-brand-50/40 p-3 text-sm">
+              <p className="text-2xs text-brand-700 sm:text-xs">Available balance</p>
+              <p className="mt-0.5 text-lg font-bold tabular-nums text-ink">
+                {formatKesCurrency(availableBalance)}
+              </p>
+            </div>
+          </div>
 
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Amount</span>
-              <input
-                type="number"
-                min="1"
-                max={Math.max(availableBalance, 0)}
-                step="1"
-                value={values.amount}
-                onChange={(event) => setValues((current) => ({ ...current, amount: event.target.value }))}
-                disabled={busy}
-                className="w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-50"
-              />
-            </label>
+          {!otpStep ? (
+            <div className="grid gap-3">
+              <div className="rounded-xl border border-amber-200/80 bg-amber-50 p-3 text-sm">
+                <p className="text-2xs font-semibold uppercase tracking-wide text-amber-800">
+                  Withdrawal mode
+                </p>
+                <p className="mt-0.5 font-semibold capitalize text-amber-950">
+                  {withdrawalMode === 'instant' ? 'Instant' : 'Scheduled'}
+                </p>
+                <p className="mt-1 text-xs text-amber-900/90">
+                  {withdrawalMode === 'instant'
+                    ? 'Withdrawals are processed immediately in development.'
+                    : 'Withdrawals are queued for the next scheduled processing window.'}
+                </p>
+              </div>
 
-            {withdrawalMode === 'scheduled' ? (
               <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Scheduled for</span>
+                <span className="mb-1 block field-label">Amount</span>
                 <input
-                  type="datetime-local"
-                  min={minDateTime}
-                  value={values.scheduled_for}
-                  onChange={(event) =>
-                    setValues((current) => ({ ...current, scheduled_for: event.target.value }))
-                  }
+                  type="number"
+                  min="1"
+                  max={Math.max(availableBalance, 0)}
+                  step="1"
+                  value={values.amount}
+                  onChange={(event) => setValues((current) => ({ ...current, amount: event.target.value }))}
                   disabled={busy}
-                  className="w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-50"
+                  className="field-control"
                 />
               </label>
-            ) : (
-              <div className="rounded border border-slate-200 bg-slate-50 p-3 text-sm">
-                <p className="text-slate-500">Scheduled for</p>
-                <p className="font-medium text-slate-900">Immediate processing</p>
-              </div>
-            )}
 
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Password</span>
-              <input
-                type="password"
-                value={values.password}
-                onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
-                disabled={busy}
-                className="w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-50"
-              />
-            </label>
-          </div>
-        ) : (
-          <div className="mt-4 grid gap-3">
-            <div className="rounded border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-slate-500">Amount</p>
-              <p className="font-medium text-slate-900">{formatKesCurrency(Number(values.amount) || 0)}</p>
+              {withdrawalMode === 'scheduled' ? (
+                <label className="text-sm">
+                  <span className="mb-1 block field-label">Scheduled for</span>
+                  <input
+                    type="datetime-local"
+                    min={minDateTime}
+                    value={values.scheduled_for}
+                    onChange={(event) =>
+                      setValues((current) => ({ ...current, scheduled_for: event.target.value }))
+                    }
+                    disabled={busy}
+                    className="field-control"
+                  />
+                </label>
+              ) : (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                  <p className="text-2xs text-ink-muted">Scheduled for</p>
+                  <p className="mt-0.5 font-medium text-ink">Immediate processing</p>
+                </div>
+              )}
+
+              <label className="text-sm">
+                <span className="mb-1 block field-label">Password</span>
+                <input
+                  type="password"
+                  value={values.password}
+                  onChange={(event) =>
+                    setValues((current) => ({ ...current, password: event.target.value }))
+                  }
+                  disabled={busy}
+                  className="field-control"
+                  autoComplete="current-password"
+                />
+              </label>
             </div>
-
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <p className="font-medium">Enter the {OTP_CODE_LENGTH}-digit code we sent by SMS.</p>
-              {challengeMessage ? <p className="mt-1 text-amber-800">{challengeMessage}</p> : null}
-            </div>
-
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Verification code</span>
-              <input
-                ref={otpInputRef}
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={OTP_CODE_LENGTH}
-                value={values.code ?? ''}
-                onChange={(event) =>
-                  setValues((current) => ({
-                    ...current,
-                    code: event.target.value.replace(/\D/g, '').slice(0, OTP_CODE_LENGTH)
-                  }))
-                }
-                disabled={busy}
-                className="w-full rounded border border-slate-300 px-3 py-2 tracking-[0.4em] disabled:bg-slate-50"
-              />
-            </label>
-
-            {onResendOtp ? (
-              <div className="flex items-center justify-between gap-2 text-sm">
-                <span className="text-slate-500">Didn&apos;t get the code?</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onResendOtp();
-                    setResendCooldown(OTP_RESEND_COOLDOWN_SECONDS);
-                  }}
-                  disabled={busy || resendCooldown > 0}
-                  className="font-medium text-emerald-700 hover:text-emerald-800 disabled:cursor-not-allowed disabled:text-slate-400"
-                >
-                  {isRequestingOtp
-                    ? 'Sending…'
-                    : resendCooldown > 0
-                      ? `Resend in ${resendCooldown}s`
-                      : 'Resend code'}
-                </button>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {error ? (
-          <p className="mt-3 text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
-          {otpStep && onBackFromOtp ? (
-            <button
-              type="button"
-              onClick={onBackFromOtp}
-              disabled={busy}
-              className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700"
-            >
-              Back
-            </button>
           ) : (
-            <button
-              type="button"
-              onClick={close}
-              className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700"
-            >
-              Cancel
-            </button>
+            <div className="grid gap-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                <p className="text-2xs text-ink-muted">Amount</p>
+                <p className="mt-0.5 text-lg font-bold tabular-nums text-ink">
+                  {formatKesCurrency(Number(values.amount) || 0)}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm text-amber-950">
+                <p className="font-medium">Enter the {OTP_CODE_LENGTH}-digit code we sent by SMS.</p>
+                {challengeMessage ? <p className="mt-1 text-xs text-amber-900/90">{challengeMessage}</p> : null}
+              </div>
+
+              <label className="text-sm">
+                <span className="mb-1 block field-label">Verification code</span>
+                <input
+                  ref={otpInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={OTP_CODE_LENGTH}
+                  value={values.code ?? ''}
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      code: event.target.value.replace(/\D/g, '').slice(0, OTP_CODE_LENGTH)
+                    }))
+                  }
+                  disabled={busy}
+                  className="field-control tracking-[0.35em]"
+                />
+              </label>
+
+              {onResendOtp ? (
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="text-ink-muted">Didn&apos;t get the code?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onResendOtp();
+                      setResendCooldown(OTP_RESEND_COOLDOWN_SECONDS);
+                    }}
+                    disabled={busy || resendCooldown > 0}
+                    className="font-semibold text-brand-700 hover:underline disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline"
+                  >
+                    {isRequestingOtp
+                      ? 'Sending…'
+                      : resendCooldown > 0
+                        ? `Resend in ${resendCooldown}s`
+                        : 'Resend code'}
+                  </button>
+                </div>
+              ) : null}
+            </div>
           )}
-          <button
-            type="submit"
-            disabled={
-              busy ||
-              (otpStep
-                ? (values.code ?? '').length !== OTP_CODE_LENGTH
-                : !credentialsValid)
-            }
-            className="rounded bg-slate-900 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {otpStep
-              ? isSubmitting
-                ? 'Confirming…'
-                : 'Confirm withdrawal'
-              : isRequestingOtp
-                ? 'Sending code…'
-                : isSubmitting
-                  ? 'Submitting…'
-                  : 'Continue'}
-          </button>
+
+          {error ? (
+            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="mobile-actions sm:flex-row sm:justify-end">
+            {otpStep && onBackFromOtp ? (
+              <Button type="button" variant="secondary" onClick={onBackFromOtp} disabled={busy}>
+                Back
+              </Button>
+            ) : (
+              <Button type="button" variant="secondary" onClick={close} disabled={busy}>
+                Cancel
+              </Button>
+            )}
+            <Button
+              type="submit"
+              disabled={
+                busy ||
+                (otpStep
+                  ? (values.code ?? '').length !== OTP_CODE_LENGTH
+                  : !credentialsValid)
+              }
+              loading={busy}
+            >
+              {otpStep
+                ? isSubmitting
+                  ? 'Confirming…'
+                  : 'Confirm withdrawal'
+                : isRequestingOtp
+                  ? 'Sending code…'
+                  : isSubmitting
+                    ? 'Submitting…'
+                    : 'Continue'}
+            </Button>
+          </div>
         </div>
       </form>
     </div>

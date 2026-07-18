@@ -97,6 +97,19 @@ export const AdminWithdrawalsPage = () => {
   }, [page, withdrawals]);
   const hasNextPage = page * PAGE_SIZE < withdrawals.length;
 
+  const requestDisabled =
+    churchQuery.isLoading ||
+    dashboardQuery.isLoading ||
+    churchQuery.isError ||
+    dashboardQuery.isError ||
+    availableBalance === undefined;
+
+  const openForm = () => {
+    setError(null);
+    setOtpStep(false);
+    setIsFormOpen(true);
+  };
+
   const closeModal = () => {
     setError(null);
     setIsFormOpen(false);
@@ -206,66 +219,69 @@ export const AdminWithdrawalsPage = () => {
         </div>
       }
     >
-      <div className="space-y-5 animate-fade-in">
+      <div className="space-y-4 animate-fade-in sm:space-y-5">
         <PageHeader
           title="Withdrawals"
-          description="Review withdrawal history and request new withdrawals from the available balance."
+          description="Request payouts and track withdrawal history."
           actions={
             <Button
-              onClick={() => {
-                setError(null);
-                setOtpStep(false);
-                setIsFormOpen(true);
-              }}
-              disabled={
-                churchQuery.isLoading ||
-                dashboardQuery.isLoading ||
-                churchQuery.isError ||
-                dashboardQuery.isError ||
-                availableBalance === undefined
-              }
+              fullWidth
+              className="sm:!w-auto"
+              onClick={openForm}
+              disabled={requestDisabled}
             >
               Request withdrawal
             </Button>
           }
         />
 
-        <section className="grid gap-3 sm:grid-cols-3" aria-label="Withdrawal summary">
+        <section
+          className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3"
+          aria-label="Withdrawal summary"
+        >
           <StatCard
             label="Available balance"
             value={availableBalance === undefined ? '—' : formatKesCurrency(availableBalance)}
             accent="brand"
             hint="Ready to withdraw"
+            compact
           />
           <StatCard
-            label="Withdrawal method"
+            label="Method"
             value={
-              <span className="capitalize">
-                {churchQuery.data?.withdrawal_method ?? 'Unknown'}
-              </span>
+              <span className="capitalize">{churchQuery.data?.withdrawal_method ?? 'Unknown'}</span>
             }
+            compact
           />
-          <StatCard
-            label="Destination number"
-            value={
-              <span className="text-lg sm:text-xl">
-                {churchQuery.data?.withdrawal_number ?? '—'}
-              </span>
-            }
-          />
+          <div className="col-span-2 sm:col-span-1">
+            <StatCard
+              label="Destination"
+              value={
+                <span className="break-all text-base font-bold tabular-nums sm:text-xl">
+                  {churchQuery.data?.withdrawal_number ?? '—'}
+                </span>
+              }
+              compact
+            />
+          </div>
         </section>
 
-        <section className="rounded-xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          <p className="font-semibold">Withdrawal processing mode</p>
-          <p className="mt-1 text-amber-900/90">
+        <section className="rounded-xl border border-amber-200/80 bg-amber-50 px-3.5 py-3 text-sm text-amber-950 sm:px-4">
+          <p className="text-2xs font-semibold uppercase tracking-wide text-amber-800">
+            Processing mode
+          </p>
+          <p className="mt-0.5 font-semibold capitalize">
+            {withdrawalMode === 'instant' ? 'Instant' : 'Scheduled'}
+          </p>
+          <p className="mt-1 text-xs text-amber-900/90 sm:text-sm">
             {withdrawalMode === 'instant'
               ? 'Instant mode is enabled for development and test environments.'
-              : 'Scheduled mode is enabled. Withdrawals will run in the next processing window.'}
+              : 'Scheduled mode is enabled. Withdrawals run in the next processing window.'}
           </p>
         </section>
 
         {dashboardQuery.isError ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700 sm:p-4">
             Unable to load balance information. Please refresh and try again.
           </div>
         ) : null}
