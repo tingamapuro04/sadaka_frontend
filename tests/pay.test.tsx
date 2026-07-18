@@ -90,7 +90,7 @@ describe('PayPage component', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText('Church Not Found')).toBeInTheDocument();
+      expect(screen.getByText(/Church not found/i)).toBeInTheDocument();
       expect(screen.getByText(/No church registered as/i)).toBeInTheDocument();
     });
   });
@@ -109,7 +109,7 @@ describe('PayPage component', () => {
     });
 
     expect(screen.getByText(/KES 2 platform fee/i)).toBeInTheDocument();
-    expect(screen.getByText(/STK prompt/i)).toBeInTheDocument();
+    expect(screen.getByText(/M-Pesa prompt/i)).toBeInTheDocument();
   });
 
   it('validates phone number and offering amount, then submits correctly', async () => {
@@ -141,7 +141,7 @@ describe('PayPage component', () => {
     fireEvent.change(amountInputs[0]!, { target: { value: '500' } });
     fireEvent.change(amountInputs[1]!, { target: { value: '200' } });
 
-    const submitBtn = screen.getByRole('button', { name: /Pay Now/i });
+    const submitBtn = screen.getByRole('button', { name: /Pay with M-Pesa/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {

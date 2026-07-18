@@ -107,21 +107,23 @@ export const PaymentForm = ({
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
         {error && (
           <div
             role="alert"
             aria-live="assertive"
-            className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+            className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm font-medium text-red-700"
           >
             {error}
           </div>
         )}
 
-        <div className="space-y-3">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="payer_name" className="text-xs font-medium text-slate-600">
-              Name <span className="font-normal text-slate-400">(optional)</span>
+        <section className="space-y-3" aria-label="Your details">
+          <h2 className="text-2xs font-semibold uppercase tracking-wider text-ink-muted">Your details</h2>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="payer_name" className="field-label text-xs">
+              Name <span className="font-normal text-ink-muted">(optional)</span>
             </label>
             <input
               id="payer_name"
@@ -129,7 +131,7 @@ export const PaymentForm = ({
               {...register('payer_name')}
               disabled={isSubmitting}
               className={fieldClass}
-              placeholder="John Doe"
+              placeholder="Your name"
               autoComplete="name"
             />
           </div>
@@ -151,9 +153,9 @@ export const PaymentForm = ({
           />
 
           {church.groups_enabled && groups.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <label htmlFor="group_id" className="text-xs font-medium text-slate-600">
-                Group / fellowship <span className="font-normal text-slate-400">(optional)</span>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="group_id" className="field-label text-xs">
+                Group / fellowship <span className="font-normal text-ink-muted">(optional)</span>
               </label>
               <div className="relative">
                 <select
@@ -180,11 +182,11 @@ export const PaymentForm = ({
               )}
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="space-y-2">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Offering</h3>
+        <section className="space-y-3" aria-label="Offering amounts">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-2xs font-semibold uppercase tracking-wider text-ink-muted">Offering</h2>
             {fields.length < categories.length && (
               <button
                 type="button"
@@ -197,7 +199,7 @@ export const PaymentForm = ({
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {fields.map((field, index) => {
               const selectedCategoryIds = new Set(
                 (watchedItems || [])
@@ -209,77 +211,89 @@ export const PaymentForm = ({
               const categoryRegister = register(`items.${index}.category_id`);
 
               return (
-                <div key={field.id} className="flex items-start gap-2">
-                  <div className="min-w-0 flex-1">
-                    <select
-                      {...categoryRegister}
-                      ref={(el) => {
-                        categoryRegister.ref(el);
-                        if (el) lastFieldRefMap.current[index] = el;
-                      }}
-                      disabled={isSubmitting}
-                      aria-label={`Category ${index + 1}`}
-                      className={fieldClass}
-                    >
-                      <option value="">Category</option>
-                      {categories.map((category) => (
-                        <option
-                          key={category.id}
-                          value={category.id}
-                          disabled={selectedCategoryIds.has(category.id)}
-                        >
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    {categoryError && (
-                      <span className="mt-0.5 block text-xs font-medium text-red-500">{categoryError}</span>
-                    )}
-                  </div>
-                  <div className="w-[7.5rem] shrink-0">
-                    <Controller
-                      name={`items.${index}.amount`}
-                      control={control}
-                      render={({ field: { onChange, value, ref } }) => (
-                        <div className="relative">
-                          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-xs text-slate-400">
-                            KES
-                          </span>
-                          <input
-                            ref={ref}
-                            type="number"
-                            min="0"
-                            step="1"
-                            inputMode="numeric"
-                            value={value || ''}
-                            disabled={isSubmitting}
-                            aria-label={`Amount ${index + 1}`}
-                            onChange={(event) => {
-                              const raw = event.target.value;
-                              onChange(raw === '' ? 0 : Math.max(0, parseInt(raw, 10) || 0));
-                            }}
-                            className={`${fieldClass} pl-10 tabular-nums`}
-                            placeholder="0"
-                          />
-                        </div>
+                <div
+                  key={field.id}
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-3"
+                >
+                  <div className="flex flex-col gap-2.5">
+                    <div className="min-w-0">
+                      <label className="mb-1 block text-2xs font-medium text-ink-muted">
+                        Category {fields.length > 1 ? index + 1 : ''}
+                      </label>
+                      <select
+                        {...categoryRegister}
+                        ref={(el) => {
+                          categoryRegister.ref(el);
+                          if (el) lastFieldRefMap.current[index] = el;
+                        }}
+                        disabled={isSubmitting}
+                        aria-label={`Category ${index + 1}`}
+                        className={fieldClass}
+                      >
+                        <option value="">Select category</option>
+                        {categories.map((category) => (
+                          <option
+                            key={category.id}
+                            value={category.id}
+                            disabled={selectedCategoryIds.has(category.id)}
+                          >
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      {categoryError && (
+                        <span className="mt-1 block text-xs font-medium text-red-500">{categoryError}</span>
                       )}
-                    />
-                    {amountError && (
-                      <span className="mt-0.5 block text-xs font-medium text-red-500">{amountError}</span>
-                    )}
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                      <div className="min-w-0 flex-1">
+                        <label className="mb-1 block text-2xs font-medium text-ink-muted">Amount</label>
+                        <Controller
+                          name={`items.${index}.amount`}
+                          control={control}
+                          render={({ field: { onChange, value, ref } }) => (
+                            <div className="relative">
+                              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-medium text-slate-400">
+                                KES
+                              </span>
+                              <input
+                                ref={ref}
+                                type="number"
+                                min="0"
+                                step="1"
+                                inputMode="numeric"
+                                value={value || ''}
+                                disabled={isSubmitting}
+                                aria-label={`Amount ${index + 1}`}
+                                onChange={(event) => {
+                                  const raw = event.target.value;
+                                  onChange(raw === '' ? 0 : Math.max(0, parseInt(raw, 10) || 0));
+                                }}
+                                className={`${fieldClass} pl-11 tabular-nums text-base`}
+                                placeholder="0"
+                              />
+                            </div>
+                          )}
+                        />
+                        {amountError && (
+                          <span className="mt-1 block text-xs font-medium text-red-500">{amountError}</span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        disabled={isSubmitting || fields.length === 1}
+                        title={fields.length === 1 ? 'At least one category required' : 'Remove'}
+                        aria-label="Remove category"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    disabled={isSubmitting || fields.length === 1}
-                    title={fields.length === 1 ? 'At least one category required' : 'Remove'}
-                    aria-label="Remove category"
-                    className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
                 </div>
               );
             })}
@@ -288,35 +302,37 @@ export const PaymentForm = ({
           {errors.items && !Array.isArray(errors.items) && (
             <span className="block text-xs font-semibold text-red-500">{errors.items.message}</span>
           )}
-        </div>
+        </section>
 
         <SummaryCard />
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-colors hover:bg-brand-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
-        >
-          {isSubmitting ? (
-            <>
-              <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24" aria-hidden>
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Sending prompt…
-            </>
-          ) : (
-            'Pay Now'
-          )}
-        </button>
+        <div className="space-y-2.5 pt-0.5">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white shadow-soft transition-colors hover:bg-brand-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
+          >
+            {isSubmitting ? (
+              <>
+                <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24" aria-hidden>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Sending prompt…
+              </>
+            ) : (
+              'Pay with M-Pesa'
+            )}
+          </button>
 
-        <p className="text-center text-[11px] leading-relaxed text-slate-400">
-          Includes KES 2 platform fee · STK prompt on your phone
-        </p>
+          <p className="text-center text-2xs leading-relaxed text-ink-muted">
+            Includes KES 2 platform fee · Enter your PIN on the M-Pesa prompt
+          </p>
+        </div>
       </form>
     </FormProvider>
   );

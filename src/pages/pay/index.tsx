@@ -34,18 +34,19 @@ export const PayPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm animate-pulse">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-surface p-4 safe-pb">
+        <div className="w-full max-w-md space-y-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-card animate-pulse">
           <div className="flex items-center gap-3">
-            <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
+            <Skeleton className="h-12 w-12 shrink-0 rounded-xl" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-40" />
               <Skeleton className="h-3 w-24" />
             </div>
           </div>
-          <Skeleton className="h-10 w-full rounded-lg" />
-          <Skeleton className="h-10 w-full rounded-lg" />
-          <Skeleton className="h-16 w-full rounded-lg" />
+          <Skeleton className="h-11 w-full rounded-lg" />
+          <Skeleton className="h-11 w-full rounded-lg" />
+          <Skeleton className="h-20 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-xl" />
         </div>
       </div>
     );
@@ -56,15 +57,15 @@ export const PayPage = () => {
 
   if (isNotFound) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Church Not Found</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            No church registered as <span className="font-semibold text-slate-800">"{username}"</span>.
+      <div className="flex min-h-[100dvh] items-center justify-center bg-surface p-4 safe-pb">
+        <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-card">
+          <h2 className="text-lg font-bold text-ink">Church not found</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+            No church registered as <span className="font-semibold text-ink">“{username}”</span>.
           </p>
           <Link
             to="/"
-            className="mt-5 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
           >
             Go home
           </Link>
@@ -75,16 +76,16 @@ export const PayPage = () => {
 
   if (isInvalidUsername) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Invalid Church Link</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Use a link like <span className="font-semibold text-slate-800">/pay/your-church-username</span>.
+      <div className="flex min-h-[100dvh] items-center justify-center bg-surface p-4 safe-pb">
+        <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-card">
+          <h2 className="text-lg font-bold text-ink">Invalid church link</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+            Use a link like <span className="font-semibold text-ink">/pay/your-church-username</span>.
           </p>
           <button
             type="button"
             onClick={() => refetch()}
-            className="mt-5 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
           >
             Try again
           </button>
@@ -95,16 +96,16 @@ export const PayPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Connection Failed</h2>
-          <p className="mt-2 text-sm text-slate-500">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-surface p-4 safe-pb">
+        <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-card">
+          <h2 className="text-lg font-bold text-ink">Connection failed</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-muted">
             {error.message || 'Unable to load payment details. Check your connection.'}
           </p>
           <button
             type="button"
             onClick={() => refetch()}
-            className="mt-5 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
           >
             Try again
           </button>
@@ -127,9 +128,9 @@ export const PayPage = () => {
     .toUpperCase();
 
   return (
-    <div className="min-h-[70vh] bg-gradient-to-b from-brand-50/50 via-surface to-surface">
+    <div className="min-h-[100dvh] bg-gradient-to-b from-brand-50/60 via-surface to-surface">
       <OfflineBanner />
-      <div className="px-4 py-8 sm:py-12">
+      <div className="px-3.5 pb-8 pt-5 sm:px-4 sm:py-10 safe-pb">
         <div className="mx-auto max-w-md animate-fade-in">
           {paymentResult ? (
             <PaymentStatus
@@ -139,42 +140,58 @@ export const PayPage = () => {
               onReset={handleReset}
             />
           ) : (
-            <div className="card p-5 shadow-card sm:p-6">
-              <header className="mb-5 flex items-center gap-3">
-                {church.logo_url && !logoLoadFailed ? (
-                  <img
-                    src={church.logo_url}
-                    alt={`${church.name} logo`}
-                    width={48}
-                    height={48}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-12 w-12 shrink-0 rounded-xl border border-slate-100 object-cover shadow-soft"
-                    onError={() => setLogoLoadFailed(true)}
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-sm font-bold text-brand-700 ring-1 ring-brand-100">
-                    {churchInitials || 'CH'}
+            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
+              <header className="border-b border-slate-100 bg-gradient-to-br from-white to-brand-50/30 px-4 py-4 sm:px-5 sm:py-5">
+                <div className="flex items-center gap-3">
+                  {church.logo_url && !logoLoadFailed ? (
+                    <img
+                      src={church.logo_url}
+                      alt={`${church.name} logo`}
+                      width={48}
+                      height={48}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-12 w-12 shrink-0 rounded-xl border border-slate-100 object-cover shadow-soft"
+                      onError={() => setLogoLoadFailed(true)}
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-sm font-bold text-brand-700 ring-1 ring-brand-100">
+                      {churchInitials || 'CH'}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-brand-700">
+                      Give with M-Pesa
+                    </p>
+                    <h1 className="truncate text-lg font-bold tracking-tight text-ink sm:text-xl">
+                      {church.name}
+                    </h1>
+                    <p className="text-xs text-ink-muted">Secure · Prompt on your phone</p>
                   </div>
-                )}
-                <div className="min-w-0">
-                  <h1 className="truncate text-lg font-bold tracking-tight text-ink">
-                    {church.name}
-                  </h1>
-                  <p className="text-xs text-ink-muted">Pay securely with M-Pesa</p>
                 </div>
               </header>
 
-              <PaymentForm
-                church={church}
-                categories={categories}
-                groups={groups}
-                isSubmitting={submitMutation.isPending}
-                onSubmit={handleFormSubmit}
-                error={submitMutation.error?.message}
-              />
+              <div className="px-4 py-4 sm:px-5 sm:py-5">
+                <PaymentForm
+                  church={church}
+                  categories={categories}
+                  groups={groups}
+                  isSubmitting={submitMutation.isPending}
+                  onSubmit={handleFormSubmit}
+                  error={submitMutation.error?.message}
+                />
+              </div>
             </div>
           )}
+
+          {!paymentResult ? (
+            <p className="mt-4 text-center text-2xs leading-relaxed text-ink-muted">
+              Powered by Sadaka ·{' '}
+              <a href="mailto:support@sadaka.co.ke" className="font-medium text-brand-700 hover:underline">
+                support@sadaka.co.ke
+              </a>
+            </p>
+          ) : null}
         </div>
       </div>
     </div>
