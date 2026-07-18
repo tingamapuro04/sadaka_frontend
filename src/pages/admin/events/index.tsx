@@ -7,7 +7,6 @@ import {
   ConfirmDialog,
   EmptyState,
   PageHeader,
-  Select,
   StatusBadge,
   useToast
 } from '../../../components/ui';
@@ -21,6 +20,13 @@ import {
 } from '../api';
 import type { ChurchEvent, CreateEventPayload, EventStatus, UpdateEventPayload } from '../types';
 import { EventFormModal } from './EventFormModal';
+
+const STATUS_FILTERS = [
+  { value: '', label: 'All' },
+  { value: 'active', label: 'Active' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'closed', label: 'Closed' }
+] as const;
 
 export const AdminEventsPage = () => {
   const { role } = useAuth();
@@ -86,36 +92,49 @@ export const AdminEventsPage = () => {
     }
   };
 
+  const openCreate = () => {
+    setFormError(null);
+    setModalEvent(null);
+  };
+
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-4 animate-fade-in sm:space-y-5">
       <PageHeader
         title="Events"
-        description="Create fundraisers with unique payment links and track contributions per event."
+        description="Fundraisers with unique payment links and per-event tracking."
         actions={
           !isReadonly ? (
-            <Button
-              onClick={() => {
-                setFormError(null);
-                setModalEvent(null);
-              }}
-            >
+            <Button fullWidth className="sm:!w-auto" onClick={openCreate}>
               Create event
             </Button>
           ) : undefined
         }
       />
 
-      <div className="max-w-xs">
-        <Select
-          label="Status"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-          <option value="closed">Closed</option>
-        </Select>
+      <div>
+        <p className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-ink-muted">
+          Status
+        </p>
+        <div className="mobile-chip-row" role="group" aria-label="Filter events by status">
+          {STATUS_FILTERS.map((option) => {
+            const active = statusFilter === option.value;
+            return (
+              <button
+                key={option.value || 'all'}
+                type="button"
+                onClick={() => setStatusFilter(option.value)}
+                className={`inline-flex shrink-0 items-center rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? 'border-brand-600 bg-brand-600 text-white shadow-soft'
+                    : 'border-slate-200 bg-white text-slate-700 shadow-soft active:bg-slate-50'
+                }`}
+                aria-pressed={active}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {eventsQuery.isLoading ? (
@@ -124,7 +143,7 @@ export const AdminEventsPage = () => {
         </p>
       ) : null}
       {eventsQuery.isError ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+        <p className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700 sm:p-4" role="alert">
           Unable to load events.
         </p>
       ) : null}
@@ -139,14 +158,7 @@ export const AdminEventsPage = () => {
               : 'Create your first event to get a shareable payment link for congregants.'
           }
           actionLabel={isReadonly ? undefined : 'Create your first event'}
-          onAction={
-            isReadonly
-              ? undefined
-              : () => {
-                  setFormError(null);
-                  setModalEvent(null);
-                }
-          }
+          onAction={isReadonly ? undefined : openCreate}
         />
       ) : null}
 
@@ -159,58 +171,58 @@ export const AdminEventsPage = () => {
               target && target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : null;
 
             return (
-              <li
-                key={event.id}
-                className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      to={`/admin/events/${event.id}`}
-                      className="font-semibold text-ink hover:text-brand-700 hover:underline"
-                    >
-                      {event.title}
-                    </Link>
-                    <StatusBadge label={event.status} />
-                  </div>
-                  <p className="mt-1 truncate text-xs text-ink-muted">/{event.slug}</p>
-                  <p className="mt-2 text-sm text-ink-muted">
-                    Raised{' '}
-                    <span className="font-semibold tabular-nums text-ink">
-                      {formatKesCurrency(raised)}
-                    </span>
-                    {target != null ? (
-                      <span>
-                        {' '}
-                        of {formatKesCurrency(target)}
-                      </span>
-                    ) : null}
-                    <span>
-                      {' '}
-                      · {event.totals?.paid_count ?? 0} paid
-                      {(event.totals?.awaiting_count ?? 0) > 0
-                        ? ` · ${event.totals?.awaiting_count} pending`
-                        : ''}
-                    </span>
-                  </p>
-                  {progress != null ? (
-                    <div className="mt-2 h-1.5 max-w-xs overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className="h-full rounded-full bg-brand-600"
-                        style={{ width: `${progress}%` }}
+              <li key={event.id} className="p-3.5 sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        to={`/admin/events/${event.id}`}
+                        className="truncate text-sm font-semibold text-ink hover:text-brand-700 hover:underline sm:text-base"
+                      >
+                        {event.title}
+                      </Link>
+                      <StatusBadge
+                        label={event.status}
+                        className="!px-2 !py-0 !text-[0.65rem] sm:!px-2.5 sm:!py-0.5 sm:!text-xs"
                       />
                     </div>
-                  ) : null}
+                    <p className="mt-0.5 truncate text-2xs text-ink-muted sm:text-xs">/{event.slug}</p>
+                  </div>
+                  <p className="shrink-0 text-right text-sm font-bold tabular-nums text-ink sm:text-base">
+                    {formatKesCurrency(raised)}
+                  </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <p className="mt-2 text-xs text-ink-muted sm:text-sm">
+                  Raised{' '}
+                  <span className="font-semibold tabular-nums text-ink">{formatKesCurrency(raised)}</span>
+                  {target != null ? <> of {formatKesCurrency(target)}</> : null}
+                  <span>
+                    {' '}
+                    · {event.totals?.paid_count ?? 0} paid
+                    {(event.totals?.awaiting_count ?? 0) > 0
+                      ? ` · ${event.totals?.awaiting_count} pending`
+                      : ''}
+                  </span>
+                </p>
+
+                {progress != null ? (
+                  <div className="mt-2 h-1.5 max-w-full overflow-hidden rounded-full bg-slate-100 sm:max-w-xs">
+                    <div
+                      className="h-full rounded-full bg-brand-600"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                ) : null}
+
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   <Link
                     to={`/admin/events/${event.id}`}
-                    className="inline-flex min-h-[40px] items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-soft hover:bg-slate-50"
+                    className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-soft active:bg-slate-50 sm:min-h-[40px] sm:rounded-lg sm:font-medium sm:text-slate-700"
                   >
                     Open
                   </Link>
-                  <Button variant="secondary" size="sm" onClick={() => void copyLink(event)}>
+                  <Button variant="secondary" onClick={() => void copyLink(event)}>
                     Copy link
                   </Button>
                   {!isReadonly ? (

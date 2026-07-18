@@ -16,6 +16,8 @@ export const PageHeader = ({ title, description, actions, eyebrow }: PageHeaderP
       <h1 className="page-title">{title}</h1>
       {description ? <p className="page-subtitle">{description}</p> : null}
     </div>
-    {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+    {actions ? (
+      <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto">{actions}</div>
+    ) : null}
   </header>
 );

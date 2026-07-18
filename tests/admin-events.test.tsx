@@ -200,8 +200,10 @@ describe('Admin events UI', () => {
     });
     expect(screen.getByText('Event transactions')).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText('Jane')).toBeInTheDocument();
-      expect(screen.getByText('254712345678')).toBeInTheDocument();
+      // Mobile list + desktop table both render in the DOM (CSS toggles visibility).
+      expect(screen.getAllByText('Jane').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('254712345678').length).toBeGreaterThan(0);
     });
   });
 });
+

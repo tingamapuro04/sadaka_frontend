@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { IconCalendar } from '../../../components/icons';
 import {
   Button,
+  Card,
   ConfirmDialog,
   EmptyState,
   StatusBadge,
@@ -73,14 +75,20 @@ export const AdminEventDetailPage = () => {
   });
 
   if (eventQuery.isLoading) {
-    return <p className="text-sm text-slate-600">Loading event…</p>;
+    return (
+      <div className="card card-pad text-sm text-ink-muted" role="status">
+        Loading event…
+      </div>
+    );
   }
 
   if (eventQuery.isError || !eventQuery.data) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-red-700">Unable to load this event.</p>
-        <Link to="/admin/events" className="text-sm font-medium text-emerald-700 hover:underline">
+        <p className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
+          Unable to load this event.
+        </p>
+        <Link to="/admin/events" className="text-sm font-semibold text-brand-700 hover:underline">
           ← Back to events
         </Link>
       </div>
@@ -107,34 +115,35 @@ export const AdminEventDetailPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link to="/admin/events" className="text-sm font-medium text-emerald-700 hover:underline">
-          ← Back to events
-        </Link>
-      </div>
+    <div className="space-y-4 animate-fade-in sm:space-y-6">
+      <Link
+        to="/admin/events"
+        className="inline-flex text-sm font-semibold text-brand-700 hover:underline"
+      >
+        ← Back to events
+      </Link>
 
-      <div className="rounded border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+      <Card>
+        <div className="flex flex-col gap-3">
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-semibold text-slate-950">{event.title}</h1>
+              <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">{event.title}</h1>
               <StatusBadge label={event.status} />
             </div>
             {event.description ? (
-              <p className="mt-2 max-w-2xl text-sm text-slate-600">{event.description}</p>
+              <p className="mt-2 text-sm leading-relaxed text-ink-muted">{event.description}</p>
             ) : null}
-            <p className="mt-2 text-xs text-slate-500">Slug: {event.slug}</p>
+            <p className="mt-1.5 text-2xs text-ink-muted sm:text-xs">/{event.slug}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" onClick={() => void copyLink()}>
+
+          <div className="mobile-actions sm:flex-row sm:flex-wrap">
+            <Button variant="secondary" onClick={() => void copyLink()}>
               Copy payment link
             </Button>
             {!isReadonly ? (
               <>
                 <Button
                   variant="secondary"
-                  size="sm"
                   onClick={() => {
                     setFormError(null);
                     setEditing(true);
@@ -145,7 +154,6 @@ export const AdminEventDetailPage = () => {
                 {event.status === 'active' ? (
                   <Button
                     variant="secondary"
-                    size="sm"
                     disabled={statusMutation.isPending}
                     onClick={() => setConfirmClose(true)}
                     className="border-amber-300 text-amber-950"
@@ -155,10 +163,9 @@ export const AdminEventDetailPage = () => {
                 ) : (
                   <Button
                     variant="secondary"
-                    size="sm"
                     disabled={statusMutation.isPending}
                     onClick={() => statusMutation.mutate('active')}
-                    className="border-emerald-300 text-emerald-950"
+                    className="border-brand-200 text-brand-900"
                   >
                     Reopen event
                   </Button>
@@ -169,92 +176,136 @@ export const AdminEventDetailPage = () => {
         </div>
 
         {event.payment_url ? (
-          <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-              Public payment URL
+          <div className="mt-4 rounded-xl border border-brand-100 bg-gradient-to-br from-white to-brand-50/40 p-3">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-brand-700">
+              Public payment link
             </p>
             <a
               href={event.payment_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 break-all text-sm font-medium text-emerald-700 hover:underline"
+              className="mt-1 block truncate text-sm font-medium text-brand-700 hover:underline"
+              title={event.payment_url}
             >
               {event.payment_url}
             </a>
           </div>
         ) : null}
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <div className="rounded border border-slate-100 bg-slate-50 p-3">
-            <p className="text-xs text-slate-500">Raised (paid)</p>
-            <p className="mt-1 text-xl font-semibold text-slate-950">
-              {formatKesCurrency(raised)}
+        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-5 sm:grid-cols-3 sm:gap-3">
+          <div className="stat-card border-brand-100 bg-gradient-to-br from-white to-brand-50/40">
+            <p className="text-[0.65rem] font-medium uppercase tracking-wide text-ink-muted sm:text-xs">
+              Raised (paid)
+            </p>
+            <p className="stat-card-value text-[1.125rem] sm:text-xl">{formatKesCurrency(raised)}</p>
+          </div>
+          <div className="stat-card border-slate-200/80 bg-white">
+            <p className="text-[0.65rem] font-medium uppercase tracking-wide text-ink-muted sm:text-xs">
+              Paid gifts
+            </p>
+            <p className="stat-card-value text-[1.125rem] sm:text-xl">
+              {(event.totals?.paid_count ?? 0).toLocaleString('en-KE')}
             </p>
           </div>
-          <div className="rounded border border-slate-100 bg-slate-50 p-3">
-            <p className="text-xs text-slate-500">Paid contributions</p>
-            <p className="mt-1 text-xl font-semibold text-slate-950">
-              {event.totals?.paid_count ?? 0}
+          <div className="stat-card col-span-2 border-slate-200/80 bg-white sm:col-span-1">
+            <p className="text-[0.65rem] font-medium uppercase tracking-wide text-ink-muted sm:text-xs">
+              Awaiting payment
             </p>
-          </div>
-          <div className="rounded border border-slate-100 bg-slate-50 p-3">
-            <p className="text-xs text-slate-500">Awaiting payment</p>
-            <p className="mt-1 text-xl font-semibold text-slate-950">
-              {event.totals?.awaiting_count ?? 0}
+            <p className="stat-card-value text-[1.125rem] sm:text-xl">
+              {(event.totals?.awaiting_count ?? 0).toLocaleString('en-KE')}
             </p>
           </div>
         </div>
 
         {target != null && target > 0 ? (
           <div className="mt-4">
-            <div className="flex justify-between text-sm text-slate-600">
+            <div className="flex items-center justify-between gap-2 text-xs text-ink-muted sm:text-sm">
               <span>Goal progress</span>
-              <span>
-                {formatKesCurrency(raised)} / {formatKesCurrency(target)} ({progress}%)
+              <span className="tabular-nums">
+                {formatKesCurrency(raised)} / {formatKesCurrency(target)}
+                <span className="text-ink"> ({progress}%)</span>
               </span>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-emerald-500"
+                className="h-full rounded-full bg-brand-600"
                 style={{ width: `${progress ?? 0}%` }}
               />
             </div>
           </div>
         ) : null}
-      </div>
+      </Card>
 
       <section className="space-y-3">
         <div className="flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-950">Event transactions</h2>
-            <p className="text-sm text-slate-600">
-              Only payments made through this event&apos;s link.
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-ink sm:text-base">Event transactions</h2>
+            <p className="text-xs text-ink-muted sm:text-sm">
+              Payments made through this event&apos;s link.
             </p>
           </div>
-          <p className="text-sm text-slate-500">{totalTx} total</p>
+          <p className="shrink-0 text-xs tabular-nums text-ink-muted sm:text-sm">
+            {totalTx.toLocaleString('en-KE')} total
+          </p>
         </div>
 
-        <div className="overflow-x-auto rounded border border-slate-200 bg-white shadow-sm">
-          {txQuery.isLoading ? (
-            <p className="p-4 text-sm text-slate-600">Loading transactions…</p>
-          ) : null}
-          {txQuery.isError ? (
-            <p className="p-4 text-sm text-red-700">Unable to load transactions.</p>
-          ) : null}
-          {!txQuery.isLoading && transactions.length === 0 ? (
-            <div className="p-4">
-              <EmptyState
-                icon="💳"
-                title="No transactions yet"
-                description="Share the payment link so congregants can contribute to this event."
-              />
-            </div>
-          ) : null}
+        {txQuery.isLoading ? (
+          <div className="card card-pad text-sm text-ink-muted" role="status">
+            Loading transactions…
+          </div>
+        ) : null}
+        {txQuery.isError ? (
+          <p className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
+            Unable to load transactions.
+          </p>
+        ) : null}
+        {!txQuery.isLoading && !txQuery.isError && transactions.length === 0 ? (
+          <EmptyState
+            icon={<IconCalendar className="h-6 w-6" />}
+            title="No transactions yet"
+            description="Share the payment link so congregants can contribute to this event."
+          />
+        ) : null}
 
-          {transactions.length > 0 ? (
-            <div className="admin-table-wrap border-0 shadow-none">
+        {transactions.length > 0 ? (
+          <>
+            {/* Mobile list (table stays in DOM for desktop via CSS; only one text instance per field) */}
+            <div className="card overflow-hidden md:hidden">
+              <ul className="divide-y divide-slate-100">
+                {transactions.map((tx) => (
+                  <li key={tx.id} className="flex items-start justify-between gap-3 px-3.5 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-ink">
+                        {tx.payer_name || 'Anonymous'}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <StatusBadge
+                          label={String(tx.status)}
+                          className="!px-2 !py-0 !text-[0.65rem]"
+                        />
+                        <span className="truncate text-xs text-ink-muted">{tx.payer_phone}</span>
+                      </div>
+                      <p className="mt-1 truncate text-2xs text-ink-muted">
+                        {formatDate(tx.created_at)}
+                        {tx.mpesa_ref ? (
+                          <>
+                            <span className="mx-1 text-slate-300">·</span>
+                            <span className="font-mono">{tx.mpesa_ref}</span>
+                          </>
+                        ) : null}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-sm font-bold tabular-nums text-ink">
+                      {formatKesCurrency(tx.gross_amount)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="admin-table-wrap hidden md:block">
               <table className="admin-table">
-                <thead className="bg-slate-50">
+                <thead>
                   <tr>
                     <th>Date</th>
                     <th>Payer</th>
@@ -267,14 +318,14 @@ export const AdminEventDetailPage = () => {
                 <tbody className="divide-y divide-slate-100">
                   {transactions.map((tx) => (
                     <tr key={tx.id}>
-                      <td className="text-slate-600">{formatDate(tx.created_at)}</td>
-                      <td className="text-slate-900">{tx.payer_name || '—'}</td>
-                      <td className="font-mono text-xs text-slate-700">{tx.payer_phone}</td>
+                      <td className="text-ink-muted">{formatDate(tx.created_at)}</td>
+                      <td className="font-medium text-ink">{tx.payer_name || '—'}</td>
+                      <td className="font-mono text-xs text-ink-muted">{tx.payer_phone}</td>
                       <td>
                         <StatusBadge label={String(tx.status)} />
                       </td>
-                      <td className="font-mono text-xs text-slate-600">{tx.mpesa_ref || '—'}</td>
-                      <td className="text-right font-medium text-slate-900">
+                      <td className="font-mono text-xs text-ink-muted">{tx.mpesa_ref || '—'}</td>
+                      <td className="text-right font-semibold tabular-nums text-ink">
                         {formatKesCurrency(tx.gross_amount)}
                       </td>
                     </tr>
@@ -282,27 +333,32 @@ export const AdminEventDetailPage = () => {
                 </tbody>
               </table>
             </div>
-          ) : null}
-        </div>
+          </>
+        ) : null}
 
         {totalTx > 50 ? (
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
+          <div className="card flex items-center gap-2 px-3 py-2.5 sm:justify-between sm:px-4 sm:py-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="min-w-[5.5rem]"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="rounded border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-50"
             >
               Previous
-            </button>
-            <button
-              type="button"
+            </Button>
+            <span className="flex-1 text-center text-xs text-ink-muted sm:text-sm">
+              Page {page}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="min-w-[5.5rem]"
               disabled={!hasNext}
               onClick={() => setPage((p) => p + 1)}
-              className="rounded border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-50"
             >
               Next
-            </button>
+            </Button>
           </div>
         ) : null}
       </section>
