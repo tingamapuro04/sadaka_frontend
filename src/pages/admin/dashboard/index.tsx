@@ -1,10 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, PageHeader, StatCard, StatusBadge } from '../../../components/ui';
+import { Button, Card, PageHeader, StatCard, StatusBadge, useToast } from '../../../components/ui';
 import { useAuth } from '../../../hooks/useAuth';
 import { formatDate, formatKesCurrency } from '../../../utils/formatters';
-import { adminQueryKeys, fetchDashboard, fetchEvents, fetchTransactions } from '../api';
+import {
+  adminQueryKeys,
+  fetchChurch,
+  fetchDashboard,
+  fetchEvents,
+  fetchTransactions
+} from '../api';
 import type { AdminBreakdown } from '../types';
 
 const BreakdownList = ({ title, items, tone }: { title: string; items: AdminBreakdown[]; tone: 'emerald' | 'sky' }) => {
@@ -36,6 +42,7 @@ const BreakdownList = ({ title, items, tone }: { title: string; items: AdminBrea
 
 export const AdminDashboardPage = () => {
   const { role } = useAuth();
+  const toast = useToast();
   const isSuper = role === 'church_super_admin';
 
   const dashboardQuery = useQuery({
@@ -44,6 +51,11 @@ export const AdminDashboardPage = () => {
     refetchInterval: 30_000,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true
+  });
+  const churchQuery = useQuery({
+    queryKey: adminQueryKeys.church,
+    queryFn: fetchChurch,
+    staleTime: 60_000
   });
   const recentQuery = useQuery({
     queryKey: adminQueryKeys.transactions({ page: 1 }),
@@ -64,6 +76,18 @@ export const AdminDashboardPage = () => {
   );
   const activeEvents = eventsQuery.data?.events ?? [];
   const dashboard = dashboardQuery.data;
+  const paymentUrl = churchQuery.data?.payment_url?.trim() || '';
+  const churchUsername = churchQuery.data?.username?.trim() || '';
+
+  const copyPaymentLink = async () => {
+    if (!paymentUrl) return;
+    try {
+      await navigator.clipboard.writeText(paymentUrl);
+      toast.success('Payment link copied');
+    } catch {
+      window.prompt('Copy payment link:', paymentUrl);
+    }
+  };
 
   if (dashboardQuery.isLoading) {
     return (
@@ -129,6 +153,74 @@ export const AdminDashboardPage = () => {
         title="Dashboard"
         description="Overview of giving. Figures auto-refresh every 30 seconds."
       />
+
+      <Card aria-label="Public payment link">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">
+              Share with givers
+            </p>
+            <h2 className="mt-1 text-base font-semibold text-ink">Public payment link</h2>
+            <p className="mt-1 text-sm text-ink-muted">
+              Members can open this link to give via M-Pesa
+              {churchUsername ? (
+                <>
+                  {' '}
+                  (<span className="font-medium text-slate-700">@{churchUsername}</span>)
+                </>
+              ) : null}
+              .
+            </p>
+            {churchQuery.isLoading ? (
+              <p className="mt-3 text-sm text-ink-muted" role="status">
+                Loading payment link…
+              </p>
+            ) : null}
+            {churchQuery.isError ? (
+              <p className="mt-3 text-sm text-red-700" role="alert">
+                Unable to load your payment link. Open{' '}
+                <Link to="/admin/church" className="font-semibold underline">
+                  Church settings
+                </Link>{' '}
+                and try again.
+              </p>
+            ) : null}
+            {paymentUrl ? (
+              <a
+                href={paymentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 block break-all text-sm font-medium text-brand-700 hover:underline"
+              >
+                {paymentUrl}
+              </a>
+            ) : null}
+            {!churchQuery.isLoading && !churchQuery.isError && !paymentUrl ? (
+              <p className="mt-3 text-sm text-ink-muted">
+                Payment link is not available yet. Check church settings for your username.
+              </p>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button
+              type="button"
+              onClick={() => void copyPaymentLink()}
+              disabled={!paymentUrl}
+            >
+              Copy link
+            </Button>
+            {paymentUrl ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => window.open(paymentUrl, '_blank', 'noopener,noreferrer')}
+              >
+                Open
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </Card>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5" aria-label="Key metrics">
         {cards.map((card) => (
