@@ -58,7 +58,9 @@ export const AdminCategoriesPage = () => {
       await queryClient.cancelQueries({ queryKey: adminQueryKeys.categories });
       const previous = queryClient.getQueryData<unknown>(adminQueryKeys.categories);
       queryClient.setQueryData(adminQueryKeys.categories, (current) =>
-        toCategoryList(current).map((item) => (item.id === category.id ? { ...item, is_active: !item.is_active } : item))
+        toCategoryList(current).map((item) =>
+          item.id === category.id ? { ...item, is_active: !item.is_active } : item
+        )
       );
       return { previous };
     },
@@ -75,21 +77,31 @@ export const AdminCategoriesPage = () => {
     }
   });
 
+  const openCreate = () => setEditing(null);
+
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-4 animate-fade-in sm:space-y-5">
       <PageHeader
         title="Categories"
-        description="Manage payment purposes and active states."
+        description="Payment purposes shown on your public offering page."
         actions={
-          !isReadonly ? <Button onClick={() => setEditing(null)}>Add category</Button> : undefined
+          !isReadonly ? (
+            <Button fullWidth className="sm:!w-auto" onClick={openCreate}>
+              Add category
+            </Button>
+          ) : undefined
         }
       />
 
       {categoriesQuery.isLoading ? (
-        <p className="card card-pad text-sm text-ink-muted">Loading categories...</p>
+        <p className="card card-pad text-sm text-ink-muted" role="status">
+          Loading categories…
+        </p>
       ) : null}
       {categoriesQuery.isError ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">Unable to load categories.</p>
+        <p className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700 sm:p-4" role="alert">
+          Unable to load categories.
+        </p>
       ) : null}
       {!categoriesQuery.isLoading && !categoriesQuery.isError && categories.length === 0 ? (
         <EmptyState
@@ -97,36 +109,43 @@ export const AdminCategoriesPage = () => {
           title="No categories yet"
           description="Categories appear on your public offering page so givers can allocate amounts."
           actionLabel={isReadonly ? undefined : 'Add category'}
-          onAction={isReadonly ? undefined : () => setEditing(null)}
+          onAction={isReadonly ? undefined : openCreate}
         />
       ) : null}
 
       {categories.length > 0 ? (
-      <div className="card divide-y divide-slate-100 overflow-hidden">
-        {categories.map((category) => (
-          <div key={category.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-medium text-ink">{category.name}</p>
-              <StatusBadge label={category.is_active ? 'active' : 'closed'} />
-            </div>
-            {!isReadonly ? (
-              <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" size="sm" onClick={() => setEditing(category)}>
-                  Edit
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={toggleMutation.isPending}
-                  onClick={() => toggleMutation.mutate(category)}
-                >
-                  {category.is_active ? 'Deactivate' : 'Activate'}
-                </Button>
+        <ul className="card divide-y divide-slate-100 overflow-hidden">
+          {categories.map((category) => (
+            <li key={category.id} className="px-3.5 py-3.5 sm:px-5 sm:py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-ink sm:text-base">{category.name}</p>
+                  <div className="mt-1.5">
+                    <StatusBadge
+                      label={category.is_active ? 'active' : 'inactive'}
+                      className="!px-2 !py-0 !text-[0.65rem] sm:!px-2.5 sm:!py-0.5 sm:!text-xs"
+                    />
+                  </div>
+                </div>
               </div>
-            ) : null}
-          </div>
-        ))}
-      </div>
+              {!isReadonly ? (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                  <Button variant="secondary" size="sm" onClick={() => setEditing(category)}>
+                    Edit
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={toggleMutation.isPending}
+                    onClick={() => toggleMutation.mutate(category)}
+                  >
+                    {category.is_active ? 'Deactivate' : 'Activate'}
+                  </Button>
+                </div>
+              ) : null}
+            </li>
+          ))}
+        </ul>
       ) : null}
 
       {editing !== undefined && !isReadonly ? (
