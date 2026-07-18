@@ -1,3 +1,5 @@
+import { Button, EmptyState, StatusBadge } from '../../../components/ui';
+import { IconUsers } from '../../../components/icons';
 import type { AdminListItem } from '../types';
 
 interface GroupManagerProps {
@@ -6,36 +8,59 @@ interface GroupManagerProps {
   isMutating: boolean;
   onEdit: (group: AdminListItem) => void;
   onToggle: (group: AdminListItem) => void;
+  onAdd?: () => void;
 }
 
-export const GroupManager = ({ groups, isReadonly, isMutating, onEdit, onToggle }: GroupManagerProps) => {
+export const GroupManager = ({
+  groups,
+  isReadonly,
+  isMutating,
+  onEdit,
+  onToggle,
+  onAdd
+}: GroupManagerProps) => {
+  if (groups.length === 0) {
+    return (
+      <EmptyState
+        icon={<IconUsers className="h-6 w-6" />}
+        title="No groups yet"
+        description="Create groups so givers can attribute offerings to a congregation or ministry."
+        actionLabel={isReadonly || !onAdd ? undefined : 'Add group'}
+        onAction={isReadonly || !onAdd ? undefined : onAdd}
+      />
+    );
+  }
+
   return (
-    <div className="rounded border border-slate-200 bg-white shadow-sm">
-      {groups.length === 0 ? <p className="p-4 text-sm text-slate-500">No groups yet.</p> : null}
+    <ul className="card divide-y divide-slate-100 overflow-hidden">
       {groups.map((group) => (
-        <div key={group.id} className="flex flex-col gap-3 border-b border-slate-100 p-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-medium text-slate-950">{group.name}</p>
-            <p className="text-sm text-slate-500">{group.is_active ? 'Active' : 'Inactive'}</p>
+        <li key={group.id} className="px-3.5 py-3.5 sm:px-5 sm:py-4">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-ink sm:text-base">{group.name}</p>
+            <div className="mt-1.5">
+              <StatusBadge
+                label={group.is_active ? 'active' : 'inactive'}
+                className="!px-2 !py-0 !text-[0.65rem] sm:!px-2.5 sm:!py-0.5 sm:!text-xs"
+              />
+            </div>
           </div>
           {!isReadonly ? (
-            <div className="flex gap-2">
-              <button type="button" onClick={() => onEdit(group)} className="rounded border border-slate-300 px-3 py-1.5 text-sm">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+              <Button variant="secondary" size="sm" onClick={() => onEdit(group)}>
                 Edit
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 disabled={isMutating}
                 onClick={() => onToggle(group)}
-                className="rounded border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-50"
               >
                 {group.is_active ? 'Deactivate' : 'Activate'}
-              </button>
+              </Button>
             </div>
           ) : null}
-        </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 };
-

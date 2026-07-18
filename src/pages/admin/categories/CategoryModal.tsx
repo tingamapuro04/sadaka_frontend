@@ -7,10 +7,26 @@ interface CategoryModalProps {
   isSaving: boolean;
   onClose: () => void;
   onSave: (name: string) => void;
+  /** Shown in titles/labels — e.g. "Category" or "Group" */
+  entityLabel?: string;
+  description?: string;
 }
 
-export const CategoryModal = ({ category, isSaving, onClose, onSave }: CategoryModalProps) => {
+export const CategoryModal = ({
+  category,
+  isSaving,
+  onClose,
+  onSave,
+  entityLabel = 'Category',
+  description
+}: CategoryModalProps) => {
   const [name, setName] = useState(category?.name ?? '');
+  const entityLower = entityLabel.toLowerCase();
+  const helperText =
+    description ??
+    (entityLower === 'group'
+      ? 'Groups help givers allocate offerings to a congregation or ministry.'
+      : 'This name appears on the public payment page for givers.');
 
   useEffect(() => {
     setName(category?.name ?? '');
@@ -32,13 +48,11 @@ export const CategoryModal = ({ category, isSaving, onClose, onSave }: CategoryM
         }}
       >
         <div className="border-b border-slate-100 px-4 py-3.5 sm:px-5">
-          <p className="text-2xs font-semibold uppercase tracking-wider text-brand-700">Category</p>
+          <p className="text-2xs font-semibold uppercase tracking-wider text-brand-700">{entityLabel}</p>
           <h2 className="mt-0.5 text-lg font-semibold text-ink">
-            {category ? 'Edit category' : 'New category'}
+            {category ? `Edit ${entityLower}` : `New ${entityLower}`}
           </h2>
-          <p className="mt-1 text-xs text-ink-muted sm:text-sm">
-            This name appears on the public payment page for givers.
-          </p>
+          <p className="mt-1 text-xs text-ink-muted sm:text-sm">{helperText}</p>
         </div>
 
         <div className="space-y-4 px-4 py-4 sm:px-5">
@@ -57,11 +71,7 @@ export const CategoryModal = ({ category, isSaving, onClose, onSave }: CategoryM
             <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={isSaving || name.trim().length < 2}
-              loading={isSaving}
-            >
+            <Button type="submit" disabled={isSaving || name.trim().length < 2} loading={isSaving}>
               {isSaving ? 'Saving…' : 'Save'}
             </Button>
           </div>
