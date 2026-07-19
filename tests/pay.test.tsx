@@ -44,7 +44,7 @@ const paymentCreated = {
   total_amount: 702,
   status_url: '/api/v1/pay/grace-community/transactions/tx-123',
   poll_interval_seconds: 1,
-  max_poll_seconds: 90
+  max_poll_seconds: 120
 };
 
 describe('PayPage component', () => {

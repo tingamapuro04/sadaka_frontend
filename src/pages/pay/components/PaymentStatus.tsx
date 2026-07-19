@@ -39,7 +39,7 @@ export const PaymentStatus = ({
     timedOut && livePayment.status === 'awaiting_payment'
       ? 'timed_out'
       : livePayment.status;
-  const maxPollSeconds = payment.max_poll_seconds ?? 90;
+  const maxPollSeconds = payment.max_poll_seconds ?? 120;
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
@@ -140,8 +140,8 @@ export const PaymentStatus = ({
             <p className="font-semibold">Didn&apos;t get a prompt?</p>
             <ul className="mt-1.5 list-disc space-y-1 pl-4 text-amber-900/90">
               <li>Confirm the phone number is registered on M-Pesa.</li>
-              <li>Ensure you have network coverage and sufficient float.</li>
-              <li>Keep this page open while you enter your PIN.</li>
+              <li>Ensure you have network coverage (M-Pesa float or Fuliza is fine).</li>
+              <li>Keep this page open while you enter your PIN — confirmation can take longer with Fuliza.</li>
             </ul>
           </div>
         </>

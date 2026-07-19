@@ -35,7 +35,7 @@ const paymentCreated = {
   total_amount: 102,
   status_url: `/api/v1/pay/${churchUsername}/events/${eventSlug}/transactions/${transactionId}`,
   poll_interval_seconds: 1,
-  max_poll_seconds: 90
+  max_poll_seconds: 120
 };
 
 test.describe('event payment status polling', () => {

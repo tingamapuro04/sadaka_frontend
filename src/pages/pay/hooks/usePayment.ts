@@ -51,7 +51,7 @@ export const usePaymentStatusPolling = (
   enabled: boolean
 ) => {
   const [timedOut, setTimedOut] = useState(false);
-  const maxPollSeconds = payment?.max_poll_seconds ?? 90;
+  const maxPollSeconds = payment?.max_poll_seconds ?? 120;
   const pollIntervalSeconds = payment?.poll_interval_seconds ?? 3;
 
   useEffect(() => {

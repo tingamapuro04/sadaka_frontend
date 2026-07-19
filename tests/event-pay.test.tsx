@@ -48,7 +48,7 @@ const paymentCreated = {
   total_amount: 502,
   status_url: '/api/v1/pay/grace-community/events/youth-camp-2026/transactions/tx-evt-1',
   poll_interval_seconds: 1,
-  max_poll_seconds: 90
+  max_poll_seconds: 120
 };
 
 describe('EventPayPage', () => {
