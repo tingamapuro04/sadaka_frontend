@@ -129,7 +129,7 @@ export interface SadakaWithdrawal {
   church_id: string;
   church_name: string;
   amount: number;
-  status: 'pending' | 'processing' | 'scheduled' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   scheduled_for: string;
   created_at: string;
 }

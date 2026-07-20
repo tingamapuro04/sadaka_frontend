@@ -21,6 +21,8 @@ type SadakaAuthState = {
   isAuthReady: boolean;
   login: (token: string, role: Extract<UserRole, 'sadaka_super_admin'>) => void;
   logout: () => void;
+  /** Drop local platform session without clearing the shared httpOnly cookie. */
+  clearLocalSession: () => void;
 };
 
 type StoredSadakaAuth = {
@@ -71,11 +73,15 @@ export const SadakaAuthProvider = ({ children }: PropsWithChildren) => {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const clearLocalSession = useCallback(() => {
     setToken(null);
     setRole(null);
     persist(null, null);
     setIsAuthReady(true);
+  }, [persist]);
+
+  const logout = useCallback(() => {
+    clearLocalSession();
 
     // Clear the shared httpOnly session cookie (login also sets sadaka_auth_token).
     void fetch(`${API_BASE_URL}${API_ENDPOINTS.sadakaLogout}`, {
@@ -84,7 +90,7 @@ export const SadakaAuthProvider = ({ children }: PropsWithChildren) => {
     }).catch(() => {
       // Ignore network errors on logout
     });
-  }, [persist]);
+  }, [clearLocalSession]);
 
   const login = useCallback(
     (nextToken: string, nextRole: Extract<UserRole, 'sadaka_super_admin'>) => {
@@ -127,13 +133,11 @@ export const SadakaAuthProvider = ({ children }: PropsWithChildren) => {
             return;
           }
 
-          // Cookie is a church session — do not treat as platform login.
-          // Keep existing sessionStorage platform token if present (separate sessions).
-          const fallback = readStoredAuth();
-          if (fallback) {
-            setToken(fallback.token);
-            setRole(fallback.role);
-          }
+          // Cookie is a church session. Church and platform share one cookie name, so a
+          // platform local session must not remain active alongside church admin.
+          setToken(null);
+          setRole(null);
+          persist(null, null);
           return;
         }
       } catch {
@@ -169,9 +173,10 @@ export const SadakaAuthProvider = ({ children }: PropsWithChildren) => {
       isAuthenticated: Boolean(token && role === 'sadaka_super_admin'),
       isAuthReady,
       login,
-      logout
+      logout,
+      clearLocalSession
     }),
-    [isAuthReady, login, logout, role, token]
+    [clearLocalSession, isAuthReady, login, logout, role, token]
   );
 
   return <SadakaAuthContext.Provider value={value}>{children}</SadakaAuthContext.Provider>;

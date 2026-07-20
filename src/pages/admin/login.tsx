@@ -2,12 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { LoginForm } from '../../components/auth/LoginForm';
 import { useAuth } from '../../hooks/useAuth';
 import { useOtpLoginFlow } from '../../hooks/useOtpLoginFlow';
+import { useSadakaAuth } from '../../hooks/useSadakaAuth';
 import { requestChurchLoginOtp, startChurchLogin, verifyChurchLogin } from './api';
 import type { AdminLoginVerifyResponse } from './types';
 
 export const AdminLoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { clearLocalSession: clearPlatformSession } = useSadakaAuth();
 
   const {
     step,
@@ -24,6 +26,8 @@ export const AdminLoginPage = () => {
     verifyLogin: verifyChurchLogin,
     requestOtp: requestChurchLoginOtp,
     onSuccess: (result) => {
+      // Shared cookie is now church-scoped; drop any leftover platform local session.
+      clearPlatformSession();
       login(result.token, result.role as 'church_super_admin' | 'readonly');
       navigate('/admin/dashboard', { replace: true });
     }

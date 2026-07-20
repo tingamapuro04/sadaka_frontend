@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../src/contexts/AuthContext';
 import { SadakaAuthProvider } from '../src/contexts/SadakaAuthContext';
 import { SadakaLoginPage } from '../src/pages/sadaka/login';
 
@@ -12,11 +13,13 @@ vi.mock('../src/pages/sadaka/api', () => ({
 
 const renderPage = () =>
   render(
-    <SadakaAuthProvider>
-      <MemoryRouter>
-        <SadakaLoginPage />
-      </MemoryRouter>
-    </SadakaAuthProvider>
+    <AuthProvider>
+      <SadakaAuthProvider>
+        <MemoryRouter>
+          <SadakaLoginPage />
+        </MemoryRouter>
+      </SadakaAuthProvider>
+    </AuthProvider>
   );
 
 const fillCredentials = () => {

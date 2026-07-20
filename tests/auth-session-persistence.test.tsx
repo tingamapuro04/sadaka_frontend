@@ -115,4 +115,50 @@ describe('auth session persistence on refresh', () => {
     expect(stored.token).toBe('cookie-jwt');
     expect(stored.role).toBe('church_super_admin');
   });
+
+  it('clears platform sessionStorage when cookie is a church session', async () => {
+    sessionStorage.setItem(
+      SADAKA_STORAGE_KEY,
+      JSON.stringify({ token: 'stale-platform-jwt', role: 'sadaka_super_admin' })
+    );
+
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes('/auth/me')) {
+        return new Response(
+          JSON.stringify({
+            token: 'church-cookie-jwt',
+            role: 'church_super_admin',
+            church_id: 'c1',
+            actor_id: 'a1'
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      return new Response(null, { status: 404 });
+    });
+
+    render(
+      <AuthProvider>
+        <SadakaAuthProvider>
+          <MemoryRouter initialEntries={['/admin/dashboard']}>
+            <Routes>
+              <Route element={<ProtectedRoute />}>
+                <Route path="/admin/dashboard" element={<div>Admin dashboard</div>} />
+              </Route>
+              <Route path="/admin/login" element={<div>Admin login</div>} />
+            </Routes>
+          </MemoryRouter>
+        </SadakaAuthProvider>
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Admin dashboard')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(sessionStorage.getItem(SADAKA_STORAGE_KEY)).toBeNull();
+    });
+  });
 });

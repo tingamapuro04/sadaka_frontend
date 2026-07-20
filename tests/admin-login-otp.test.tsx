@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../src/contexts/AuthContext';
+import { SadakaAuthProvider } from '../src/contexts/SadakaAuthContext';
 import { AdminLoginPage } from '../src/pages/admin/login';
 
 vi.mock('../src/pages/admin/api', async (importOriginal) => {
@@ -26,9 +27,11 @@ vi.stubGlobal(
 const renderPage = () =>
   render(
     <AuthProvider>
-      <MemoryRouter>
-        <AdminLoginPage />
-      </MemoryRouter>
+      <SadakaAuthProvider>
+        <MemoryRouter>
+          <AdminLoginPage />
+        </MemoryRouter>
+      </SadakaAuthProvider>
     </AuthProvider>
   );
 

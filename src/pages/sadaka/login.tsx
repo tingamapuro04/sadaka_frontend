@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { LoginForm } from '../../components/auth/LoginForm';
+import { useAuth } from '../../hooks/useAuth';
 import { useOtpLoginFlow } from '../../hooks/useOtpLoginFlow';
 import { useSadakaAuth } from '../../hooks/useSadakaAuth';
 import { requestSadakaLoginOtp, startSadakaLogin, verifySadakaLogin } from './api';
@@ -8,6 +9,7 @@ import type { SadakaLoginVerifyResponse } from './types';
 export const SadakaLoginPage = () => {
   const navigate = useNavigate();
   const { login } = useSadakaAuth();
+  const { clearLocalSession: clearChurchSession } = useAuth();
 
   const {
     step,
@@ -29,6 +31,8 @@ export const SadakaLoginPage = () => {
       }
     },
     onSuccess: (result) => {
+      // Shared cookie is now platform-scoped; drop any leftover church local session.
+      clearChurchSession();
       login(result.token, 'sadaka_super_admin');
       navigate('/sadaka/dashboard', { replace: true });
     }

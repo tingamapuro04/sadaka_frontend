@@ -94,7 +94,12 @@ export const SadakaChurchDetailPage = () => {
       ) : null}
       {churchQuery.isError ? (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700 sm:p-4" role="alert">
-          Unable to load church detail.
+          {churchQuery.error &&
+          typeof churchQuery.error === 'object' &&
+          'message' in churchQuery.error &&
+          typeof (churchQuery.error as { message?: unknown }).message === 'string'
+            ? (churchQuery.error as { message: string }).message
+            : 'Unable to load church detail.'}
         </div>
       ) : null}
 

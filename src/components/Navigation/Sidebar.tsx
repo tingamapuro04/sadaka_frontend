@@ -47,8 +47,14 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const isSadakaRole = (currentRole: string | null) =>
     currentRole === 'sadaka_admin' || currentRole === 'sadaka_super_admin';
   const isSadakaPortalUser = isSadakaRole(role) || isSadakaRole(sadakaRole);
-  // Church console should stay in-product; public discovery links are for guests only.
-  const showPublicDiscoveryLinks = !isChurchAdmin;
+  // Public discovery is for guests only — never for church or platform consoles.
+  const showPublicDiscoveryLinks = !isChurchAdmin && !isSadakaPortalUser;
+
+  // Church and platform share one cookie; if both local sessions ever exist, show only
+  // the console matching the current route (and prefer church outside /sadaka).
+  const onPlatformRoute = location.pathname.startsWith('/sadaka');
+  const showChurchAdminNav = isChurchAdmin && !(isSadakaPortalUser && onPlatformRoute);
+  const showPlatformNav = isSadakaPortalUser && !(isChurchAdmin && !onPlatformRoute);
 
   const isActivePath = (to: string) => {
     if (to === '/') return location.pathname === '/';
@@ -91,7 +97,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           } satisfies NavSection
         ]
       : []),
-    ...(isChurchAdmin
+    ...(showChurchAdminNav
       ? [
           {
             title: 'Church admin',
@@ -113,7 +119,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           } satisfies NavSection
         ]
       : []),
-    ...(isSadakaPortalUser
+    ...(showPlatformNav
       ? [
           {
             title: 'Platform',
@@ -148,9 +154,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   ];
 
   const sections = isAuthenticated ? authenticatedSections : publicSections;
-  const brandHomeTo = isChurchAdmin
+  const brandHomeTo = showChurchAdminNav
     ? '/admin/dashboard'
-    : isSadakaPortalUser
+    : showPlatformNav
       ? '/sadaka/dashboard'
       : '/';
 
@@ -188,7 +194,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <div className="min-w-0">
               <p className="text-sm font-bold tracking-tight">Sadaka</p>
               <p className="truncate text-2xs text-slate-400">
-                {isSadakaPortalUser ? 'Platform console' : isAuthenticated ? 'Church console' : 'Giving platform'}
+                {showPlatformNav ? 'Platform console' : isAuthenticated ? 'Church console' : 'Giving platform'}
               </p>
             </div>
           </Link>

@@ -34,6 +34,8 @@ type AuthContextValue = {
   showSessionWarning: boolean;
   login: (token: string, role: Exclude<UserRole, null>) => void;
   logout: () => void;
+  /** Drop local church session without clearing the shared httpOnly cookie. */
+  clearLocalSession: () => void;
   stayLoggedIn: () => void;
 };
 
@@ -96,13 +98,17 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const clearLocalSession = useCallback(() => {
     clearTimers();
     setShowSessionWarning(false);
     setToken(null);
     setRole(null);
     writeStoredAuth(null, null);
     setIsAuthReady(true);
+  }, [clearTimers]);
+
+  const logout = useCallback(() => {
+    clearLocalSession();
 
     // Clear the httpOnly session cookie so refresh does not rehydrate via /api/auth/me.
     // Fire-and-forget: local state is already cleared even if the network call fails.
@@ -112,7 +118,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }).catch(() => {
       // Ignore network errors on logout
     });
-  }, [clearTimers]);
+  }, [clearLocalSession]);
 
   const scheduleInactivityTimers = useCallback(() => {
     clearTimers();
@@ -264,9 +270,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       showSessionWarning,
       login,
       logout,
+      clearLocalSession,
       stayLoggedIn
     }),
-    [isAuthReady, login, logout, role, showSessionWarning, stayLoggedIn, token]
+    [clearLocalSession, isAuthReady, login, logout, role, showSessionWarning, stayLoggedIn, token]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

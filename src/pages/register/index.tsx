@@ -7,6 +7,7 @@ import { WithdrawalSetupForm } from './components/WithdrawalSetupForm';
 import { RegisterOtpStep } from './components/RegisterOtpStep';
 import { useChurchRegistration } from './hooks/useChurchRegistration';
 import { useAuth } from '../../hooks/useAuth';
+import { useSadakaAuth } from '../../hooks/useSadakaAuth';
 import { adminAccountSchema, churchInfoSchema, withdrawalSetupSchema } from '../../utils/validation';
 import { formatOtpChallengeMessage } from '../../utils/auth-errors';
 
@@ -55,6 +56,7 @@ const validateLogoDimensions = async (file: File): Promise<boolean> => {
 export const RegisterPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { clearLocalSession: clearPlatformSession } = useSadakaAuth();
   const {
     isSubmitting,
     isRequestingOtp,
@@ -135,6 +137,7 @@ export const RegisterPage = () => {
       return;
     }
 
+    clearPlatformSession();
     login(response.token, 'church_super_admin');
     setForm(initialState);
     navigate('/admin/dashboard', { replace: true });
