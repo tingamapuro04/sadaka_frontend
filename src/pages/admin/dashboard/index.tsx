@@ -343,7 +343,7 @@ export const AdminDashboardPage = () => {
               </div>
               <div className="shrink-0 text-right">
                 <p className="font-semibold tabular-nums text-ink">
-                  {formatKesCurrency(transaction.total_amount)}
+                  {formatKesCurrency(transaction.gross_amount)}
                 </p>
                 <div className="mt-1 flex justify-end">
                   <StatusBadge label={String(transaction.status)} />

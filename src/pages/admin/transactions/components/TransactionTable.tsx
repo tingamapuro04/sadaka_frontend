@@ -56,7 +56,7 @@ export const TransactionTable = ({ transactions, filters, onSort }: TransactionT
                       {transaction.payer_name || 'Anonymous'}
                     </p>
                     <p className="shrink-0 text-sm font-bold tabular-nums text-ink">
-                      {formatKesCurrency(transaction.total_amount)}
+                      {formatKesCurrency(transaction.gross_amount)}
                     </p>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -99,7 +99,8 @@ export const TransactionTable = ({ transactions, filters, onSort }: TransactionT
                   ['payer_phone', 'Payer'],
                   ['mpesa_ref', 'M-PESA'],
                   ['status', 'Status'],
-                  ['total_amount', 'Total']
+                  // Church receives gross_amount; total_amount includes platform fee.
+                  ['gross_amount', 'Amount']
                 ] as const
               ).map(([key, label]) => (
                 <th key={key}>
@@ -134,7 +135,7 @@ export const TransactionTable = ({ transactions, filters, onSort }: TransactionT
                   <StatusBadge label={String(transaction.status)} />
                 </td>
                 <td className="font-semibold tabular-nums text-ink">
-                  {formatKesCurrency(transaction.total_amount)}
+                  {formatKesCurrency(transaction.gross_amount)}
                 </td>
                 <td>
                   <Button variant="secondary" size="sm" onClick={() => setSelected(transaction)}>
@@ -177,7 +178,7 @@ export const TransactionTable = ({ transactions, filters, onSort }: TransactionT
                   Transaction
                 </p>
                 <h2 id="tx-detail-title" className="mt-0.5 text-lg font-semibold text-ink">
-                  {formatKesCurrency(selected.total_amount)}
+                  {formatKesCurrency(selected.gross_amount)}
                 </h2>
                 <div className="mt-1.5">
                   <StatusBadge label={String(selected.status)} />
@@ -193,9 +194,8 @@ export const TransactionTable = ({ transactions, filters, onSort }: TransactionT
                 [
                   ['Payer', selected.payer_name || 'Anonymous'],
                   ['Phone', selected.payer_phone],
-                  ['Gross', formatKesCurrency(selected.gross_amount)],
-                  ['Fee', formatKesCurrency(selected.fee)],
-                  ['Total', formatKesCurrency(selected.total_amount)],
+                  // Only the church share — platform fee is not shown in church console.
+                  ['Amount', formatKesCurrency(selected.gross_amount)],
                   ['M-PESA ref', selected.mpesa_ref || '—'],
                   ['Created', formatDate(selected.created_at)],
                   ['ID', selected.id]
